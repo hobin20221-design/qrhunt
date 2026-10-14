@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>국화 보물찾기</title>
+<style>
+:root{--paper:#F4F6F1;--surface:#FFF;--ink:#1F2B24;--muted:#65736A;--line:#DCE2D9;--leaf:#2F6B4F;--mum:#E3AC14;--mum-soft:#FBF0CF;--plum:#7A3B69;--plum-soft:#F1E4EE;--leaf-soft:#E2EDE5;--bad:#B03A2E}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.5;padding-bottom:env(safe-area-inset-bottom)}
+.bar{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;background:var(--surface);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
+.bar b{font-size:16px;letter-spacing:-.02em}
+.bar button{border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:6px 14px;font:inherit;font-size:14px;font-weight:600;color:var(--ink)}
+.wrap{max-width:440px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:21px;margin:0 0 2px;letter-spacing:-.02em}
+.sub{color:var(--muted);font-size:13px;margin:0 0 18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+label{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
+input{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px 12px;background:var(--paper);font:inherit;font-size:16px;margin-bottom:12px;color:var(--ink)}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:6px;margin-bottom:12px}
+.seg button{border:1px solid var(--line);border-radius:11px;padding:9px 0;background:var(--paper);font:inherit;font-size:14px;color:var(--ink)}
+.seg button.on{border-color:var(--ink);background:var(--surface);font-weight:700}
+.consent{display:flex;gap:8px;font-size:12.5px;color:var(--muted);align-items:flex-start;margin:4px 0 12px;font-weight:400}
+.consent input{width:auto;margin:3px 0 0}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;font:inherit;font-weight:700;background:var(--leaf);color:#fff}
+.btn:disabled{opacity:.5}
+.scan{display:flex;align-items:center;justify-content:center;gap:8px;font-size:17px;padding:16px;margin-bottom:12px;background:var(--ink)}
+.link{background:none;border:0;color:var(--muted);text-decoration:underline;font:inherit;font-size:13px;display:block;margin:12px auto 0}
+.err{color:var(--bad);font-size:13px;min-height:1em;margin:0 0 8px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.chip{display:inline-block;font-size:12px;font-weight:600;padding:1px 9px;border-radius:999px;background:var(--leaf-soft);color:var(--leaf);margin-left:6px}
+.score{display:grid;grid-template-columns:1.3fr 1fr;gap:8px;margin-bottom:12px}
+.score div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.score b{display:block;font-size:30px;line-height:1.1}
+.score span{font-size:12px;color:var(--muted)}
+.result{border-radius:16px;padding:18px;margin-bottom:12px;text-align:center}
+.result .f{font-size:38px;display:block;line-height:1}
+.result b{display:block;font-size:20px;margin-top:6px}
+.result p{margin:4px 0 0;font-size:14px}
+.hit{background:var(--mum-soft)}.miss,.hour,.day,.note{background:var(--surface);border:1px solid var(--line)}.dup{background:var(--plum-soft)}.full{background:var(--leaf-soft)}
+@media (prefers-reduced-motion:no-preference){.fresh{animation:pop .45s cubic-bezier(.2,1.4,.4,1)}}
+@keyframes pop{from{transform:scale(.92);opacity:0}to{transform:none;opacity:1}}
+h3{font-size:14px;margin:0 0 6px}
+.r{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-bottom:1px solid var(--line)}
+.r:last-child{border-bottom:0}.r.mine{font-weight:700}
+.hint{color:var(--muted);font-size:13px;margin:0}
+.load{text-align:center;color:var(--muted);padding:60px 0}
+#cam{position:fixed;inset:0;z-index:20;background:#000;display:none;flex-direction:column}
+#cam.on{display:flex}
+#cam video{flex:1;width:100%;object-fit:cover}
+#cam .frame{position:absolute;left:50%;top:45%;width:min(68vw,300px);aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid #fff;border-radius:22px;box-shadow:0 0 0 100vmax rgba(0,0,0,.45)}
+#cam .msg{position:absolute;left:0;right:0;top:calc(45% + min(34vw,150px) + 20px);text-align:center;color:#fff;font-size:15px;padding:0 20px}
+#cam .close{position:absolute;left:16px;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));border:0;border-radius:13px;padding:14px;font:inherit;font-weight:700;background:#fff;color:#1F2B24}
+</style>
+</head>
+<body>
+<header class="bar"><b>국화 보물찾기</b><button type="button" id="home">홈</button></header>
+<div class="wrap" id="app"><div class="load">불러오는 중이에요</div></div>
+<div id="cam" aria-modal="true" role="dialog" aria-label="QR 찍기">
+  <video id="video" playsinline muted></video>
+  <div class="frame"></div>
+  <p class="msg" id="cammsg">QR을 네모 안에 맞춰 주세요</p>
+  <button class="close" id="camclose" type="button">닫기</button>
+</div>
+<script>
+/* ===== 여기만 바꾸면 돼요: Apps Script 배포 주소(/exec로 끝나는 주소) ===== */
+var API_URL = 'https://script.google.com/macros/s/AKfycbxg6erW2PqRI4ypkY9MXjvJ3IO1EdC_V4H1QQiyj-3ezjkTvNXHJxsigDJxlNmUuD6u/exec';
+/* ========================================================================== */
+
+var KEY = 'qrhunt-token';
+var app = document.getElementById('app');
+var info = null, team = null, mode = 'join', last = null;
+var QR = cleanQr(new URLSearchParams(location.search).get('qr'));
+if (QR) history.replaceState(null, '', location.pathname);
+
+function cleanQr(s){ return String(s || '').replace(/[^A-Za-z0-9\-]/g, '').slice(0, 12); }
+function getTok(){ try{ return localStorage.getItem(KEY); }catch(e){ return window._tok || null; } }
+function setTok(t){ try{ if(t) localStorage.setItem(KEY,t); else localStorage.removeItem(KEY); }catch(e){} window._tok = t; }
+function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function val(id){ return document.getElementById(id).value.trim(); }
+
+function call(fn, args, ok){
+  var url = API_URL + '?api=' + fn + '&a=' + encodeURIComponent(JSON.stringify(args)) + '&_=' + Date.now();
+  fetch(url, { redirect: 'follow' })
+    .then(function(r){ return r.json(); })
+    .then(ok)
+    .catch(function(){
+      app.insertAdjacentHTML('afterbegin','<p class="err">연결이 잠깐 끊겼어요. 잠시 뒤 다시 시도해 주세요.</p>');
+      var b = document.getElementById('go'); if(b) b.disabled = false;
+    });
+}
+
+function start(){
+  call('getInfo', [], function(i){
+    info = i; team = i.teams[0];
+    var t = getTok();
+    if(!t) return renderAuth();
+    if(QR) doScan(QR); else refresh();
+  });
+}
+function refresh(){
+  call('myStatus',[getTok()],function(r){
+    if(r && r.error === 'login'){ setTok(null); return renderAuth(); }
+    if(r && r.error){ app.innerHTML = '<div class="card"><p class="err">'+esc(r.error)+'</p><p class="hint">잠시 뒤 홈을 눌러 주세요.</p></div>'; return; }
+    renderStatus(r);
+  });
+}
+function doScan(q){
+  QR = '';
+  app.innerHTML = '<div class="load">'+esc(q)+' 확인 중이에요</div>';
+  call('scan',[getTok(),q],function(r){ if(r && !r.error) last = {result:r.result, qr:r.qr, cap:r.cap, fresh:true}; handle(r); });
+}
+function handle(r){
+  if(r && r.error === 'login'){ setTok(null); return renderAuth(); }
+  if(r && r.error){ last = {note:r.error, fresh:true}; return refresh(); }
+  renderStatus(r);
+}
+
+/* ---------- 참가 / 로그인 ---------- */
+function renderAuth(){
+  var head = '<h1>'+(mode==='login'?'로그인':'참가하기')+'</h1><p class="sub">'+info.open+'시부터 '+info.close+'시까지, '+info.days+'일 동안 열려요</p>';
+  if(QR) head += '<p class="hint" style="margin:-8px 0 14px">'+esc(QR)+' QR을 찍었어요. '+(mode==='login'?'로그인':'참가')+'하면 바로 확인돼요.</p>';
+  if(mode === 'login'){
+    app.innerHTML = head + '<div class="card"><label for="n">닉네임</label><input id="n" autocomplete="off">'+
+      '<label for="p">내 번호 4자리</label><input id="p" type="tel" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="참가할 때 정한 번호">'+
+      '<p class="err" id="err"></p><button class="btn" id="go">로그인</button>'+
+      '<button class="link" id="sw">처음이면 참가하기</button></div>';
+    document.getElementById('go').onclick = function(){
+      var b=this; b.disabled=true;
+      call('resume',[val('n'),val('p')],afterAuth(b));
+    };
+  } else {
+    app.innerHTML = head + '<div class="card"><label for="n">닉네임</label><input id="n" maxlength="12" autocomplete="off" placeholder="순위표에 보여요">'+
+      '<label>소속</label><div class="seg" id="seg">'+info.teams.map(function(t){return '<button type="button" data-t="'+esc(t)+'" class="'+(t===team?'on':'')+'">'+esc(t)+'</button>';}).join('')+'</div>'+
+      '<label for="p">내 번호 4자리</label><input id="p" type="tel" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="다른 폰에서 로그인할 때 써요">'+
+      '<label class="consent"><input type="checkbox" id="ok"><span>상품을 받을 때 학생증으로 소속을 확인하고, 다르면 실격이에요. 받는 정보는 닉네임과 소속뿐이고 파일럿이 끝나면 지워요.</span></label>'+
+      '<p class="err" id="err"></p><button class="btn" id="go">참가하기</button>'+
+      '<button class="link" id="sw">이미 참가했으면 로그인</button></div>';
+    document.getElementById('seg').onclick = function(e){
+      var t = e.target.getAttribute('data-t'); if(!t) return;
+      team = t; [].forEach.call(this.children,function(c){ c.className = c.getAttribute('data-t')===t?'on':''; });
+    };
+    document.getElementById('go').onclick = function(){
+      if(!document.getElementById('ok').checked){ document.getElementById('err').textContent='상품 수령 규칙에 동의해야 참가할 수 있어요.'; return; }
+      var b=this; b.disabled=true;
+      call('register',[val('n'),team,val('p')],afterAuth(b));
+    };
+  }
+  document.getElementById('sw').onclick = function(){ mode = mode==='login'?'join':'login'; renderAuth(); };
+}
+function afterAuth(b){
+  return function(r){
+    if(r.error){ b.disabled=false; document.getElementById('err').textContent=r.error; return; }
+    setTok(r.token);
+    if(QR) doScan(QR); else refresh();
+  };
+}
+
+/* ---------- 내 화면 ---------- */
+var MSG = {
+  '발견':['hit','🌼','보물 발견',function(l,r){return l.qr+' 보물을 찾았어요. 누적 '+r.me.total+'개예요.';}],
+  '꽝':['miss','🍂','꽝',function(l){return l.qr+'는 오늘 비어 있어요. 보물 위치는 매일 바뀌어요.';}],
+  '중복':['dup','🔁','이미 찾은 보물',function(l){return l.qr+'는 오늘 이미 찾았어요. 내일 다시 도전해요.';}],
+  '마감':['full','⏱️','한발 늦었어요',function(l){return l.qr+' 보물은 오늘 선착순 '+l.cap+'명이 모두 찾아갔어요.';}],
+  '시간외':['hour','🌙','운영시간이 아니에요',function(l,r){return '보물은 '+r.open+'시부터 '+r.close+'시까지만 찾을 수 있어요.';}],
+  '기간외':['day','📅','운영 기간이 아니에요',function(){return '파일럿 기간에만 보물을 찾을 수 있어요.';}]
+};
+function renderStatus(r){
+  var m = r.me, h = '';
+  h += '<div class="top"><div><b>'+esc(m.nick)+'</b><span class="chip">'+esc(m.team)+'</span></div><span class="hint">'+r.day+'일차 / '+r.days+'일</span></div>';
+  if(last && last.note){
+    h += '<div class="result note '+(last.fresh?'fresh':'')+'"><b style="font-size:16px;color:var(--bad)">'+esc(last.note)+'</b><p>건물에 붙은 QR을 다시 찍어 주세요.</p></div>';
+  } else if(last && MSG[last.result]){
+    var x = MSG[last.result];
+    h += '<div class="result '+x[0]+' '+(last.fresh?'fresh':'')+'"><span class="f">'+x[1]+'</span><b>'+x[2]+'</b><p>'+esc(x[3](last,r))+'</p></div>';
+  }
+  if(last) last.fresh = false;
+  h += '<button class="btn scan" id="scanbtn" type="button"><span aria-hidden="true">📷</span> QR 찍기</button>';
+  h += '<div class="score"><div><b>'+m.total+'</b><span>내 보물, 누적</span></div><div><b>'+m.today+'</b><span>오늘 찾은 보물</span></div></div>';
+  var my = r.teams.map(function(t){return t.team;}).indexOf(m.team)+1;
+  h += '<div class="card"><h3>학년 대항전'+(my?', 우리 '+my+'위':'')+'</h3>'+
+    r.teams.map(function(t,i){return '<div class="r'+(t.team===m.team?' mine':'')+'"><span>'+(i+1)+'. '+esc(t.team)+'</span><span>1인 평균 '+t.score.toFixed(1)+'개</span></div>';}).join('')+'</div>';
+  h += '<div class="card"><h3>개인 순위'+(m.rank?', 나는 '+m.rank+'위':'')+'</h3>'+
+    (r.top.length? r.top.map(function(p,i){return '<div class="r'+(p.mine?' mine':'')+'"><span>'+(i+1)+'. '+esc(p.nick)+'</span><span>'+p.hits+'개</span></div>';}).join('') : '<p class="hint">첫 보물의 주인공이 되어보세요.</p>')+'</div>';
+  h += '<button class="link" id="out">로그아웃</button>';
+  app.innerHTML = h;
+  document.getElementById('scanbtn').onclick = openCam;
+  document.getElementById('out').onclick = function(){ setTok(null); last=null; mode='login'; renderAuth(); };
+}
+
+/* ---------- 페이지 안 QR 스캐너 ---------- */
+var cam = document.getElementById('cam'), video = document.getElementById('video'), cammsg = document.getElementById('cammsg');
+var stream = null, detector = null, looping = false, canvas = document.createElement('canvas'), ctx = canvas.getContext('2d', { willReadFrequently: true });
+function loadJsQR(cb){
+  if(window.jsQR) return cb();
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+  s.onload = cb; s.onerror = cb;
+  document.head.appendChild(s);
+}
+function openCam(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    alert('이 브라우저에서는 카메라를 쓸 수 없어요. 사파리나 크롬으로 열거나, 휴대폰 카메라 앱으로 QR을 찍어 주세요.');
+    return;
+  }
+  cammsg.textContent = 'QR을 네모 안에 맞춰 주세요';
+  cam.className = 'on';
+  if('BarcodeDetector' in window){ try{ detector = new BarcodeDetector({ formats: ['qr_code'] }); }catch(e){ detector = null; } }
+  loadJsQR(function(){
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }).then(function(s){
+      stream = s; video.srcObject = s; video.play(); looping = true; requestAnimationFrame(tick);
+    }).catch(function(){
+      cammsg.textContent = '카메라 권한이 필요해요. 브라우저 설정에서 카메라를 허용하거나, 휴대폰 카메라 앱으로 QR을 찍어 주세요.';
+    });
+  });
+}
+function closeCam(){
+  looping = false;
+  if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream = null; }
+  video.srcObject = null; cam.className = '';
+}
+document.getElementById('camclose').onclick = closeCam;
+function found(text){
+  var q = '';
+  try{ q = new URL(text).searchParams.get('qr'); }catch(e){ q = text; }
+  q = cleanQr(q);
+  if(!q){ cammsg.textContent = '보물찾기 QR이 아니에요. 건물에 붙은 QR을 찍어 주세요.'; return false; }
+  closeCam(); doScan(q); return true;
+}
+function tick(){
+  if(!looping) return;
+  if(video.readyState >= 2){
+    if(detector){
+      detector.detect(video).then(function(c){ if(c.length && found(c[0].rawValue)) return; requestAnimationFrame(tick); })
+        .catch(function(){ detector = null; requestAnimationFrame(tick); });
+      return;
+    }
+    if(window.jsQR){
+      var w = video.videoWidth, h = video.videoHeight, k = Math.min(1, 640 / Math.max(w, h));
+      canvas.width = Math.round(w * k); canvas.height = Math.round(h * k);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      var code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+      if(code && code.data && found(code.data)) return;
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+/* 홈: 로그인 상태면 내 화면, 아니면 로그인 화면 */
+document.getElementById('home').onclick = function(){
+  closeCam(); window.scrollTo(0,0); QR = ''; last = null;
+  if(!info) return start();
+  if(getTok()){ app.innerHTML = '<div class="load">불러오는 중이에요</div>'; refresh(); }
+  else { mode = 'login'; renderAuth(); }
+};
+
+if(API_URL.indexOf('여기에') >= 0){
+  app.innerHTML = '<div class="card"><p class="err">아직 서버 주소가 안 들어갔어요.</p><p class="hint">index.html 위쪽 API_URL에 Apps Script 배포 주소를 넣어 주세요.</p></div>';
+} else start();
+</script>
+</body>
+</html>
