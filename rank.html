@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QR 보물찾기 실시간 순위</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#14213D;--ink:#14213D;--sub:#4A5568;--line:#DDE1E8;--paper:#F6F5F0;--surface:#FFFFFF;--accent:#F5B700;--accent-soft:#FFF3CC;--bad:#B03A2E}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.5}
+.wrap{max-width:960px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom))}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--sub)}
+h1{font-family:"Black Han Sans","Noto Sans KR",sans-serif;font-weight:400;font-size:clamp(34px,7vw,56px);line-height:1.05;margin:6px 0 16px}
+.round{background:var(--accent);border-radius:6px;padding:16px 18px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.round b{font-family:"Black Han Sans","Noto Sans KR",sans-serif;font-weight:400;font-size:clamp(22px,4.5vw,30px)}
+.round span{font-weight:700;font-size:15px}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.stat b{display:block;font-size:30px;line-height:1.1;font-weight:900}
+.stat span{font-size:13px;color:var(--sub);font-weight:700}
+.cols{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
+@media(min-width:760px){.cols{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px}
+h2{font-size:17px;font-weight:900;margin:0 0 4px}
+.note{font-size:13px;color:var(--sub);margin:0 0 12px}
+.team{display:grid;grid-template-columns:64px minmax(0,1fr) 72px;gap:10px;align-items:center;margin:10px 0}
+.team b{font-size:15px}
+.track{height:14px;background:var(--paper);border-radius:3px;overflow:hidden}
+.fill{height:100%;background:var(--navy);border-radius:3px}
+.team.lead .fill{background:var(--accent)}
+.team em{font-style:normal;font-weight:900;text-align:right;font-variant-numeric:tabular-nums}
+.team small{display:block;font-size:11px;color:var(--sub);font-weight:500}
+table{width:100%;border-collapse:collapse}
+th{font-size:12px;color:var(--sub);text-align:left;font-weight:700;padding:0 6px 6px;border-bottom:2px solid var(--navy)}
+td{padding:9px 6px;border-bottom:1px solid var(--line);font-size:15px}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+td.rk{width:44px;font-weight:900}
+tr.p1 td{background:var(--accent-soft)}
+tr.p1 td.rk,tr.p2 td.rk,tr.p3 td.rk{font-family:"Black Han Sans","Noto Sans KR",sans-serif;font-weight:400;font-size:18px}
+.empty{color:var(--sub);text-align:center;padding:28px 0}
+.foot{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-top:14px;font-size:13px;color:var(--sub)}
+.go{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;font-weight:700;border-radius:6px;padding:12px 18px;min-height:44px}
+.go:hover{background:#0b1426}
+.err{color:var(--bad);font-weight:700}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="eyebrow">2026 학생 리빙랩 · 도시공학과 복도</div>
+  <h1>QR 보물찾기<br>실시간 순위</h1>
+  <div id="app"><p class="empty">순위를 불러오는 중이에요</p></div>
+  <div class="foot">
+    <span id="stamp">같은 개수면 먼저 달성한 사람이 위예요 · 30초마다 자동 갱신</span>
+    <a class="go" href="./">참가하러 가기</a>
+  </div>
+</main>
+<script>
+/* ===== Apps Script 배포 주소 (index.html과 같은 주소) ===== */
+var API_URL = 'https://script.google.com/macros/s/AKfycbxg6erW2PqRI4ypkY9MXjvJ3IO1EdC_V4H1QQiyj-3ezjkTvNXHJxsigDJxlNmUuD6u/exec';
+/* ========================================================== */
+var app = document.getElementById('app'), stampEl = document.getElementById('stamp'), last = null;
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function minsLeft(next){
+  var m = /^(\d\d):00$/.exec(next || ''); if(!m) return '';
+  var now = new Date(), t = new Date(now); t.setHours(parseInt(m[1],10), 0, 0, 0);
+  var d = Math.round((t - now) / 60000);
+  return d > 0 ? ' · '+d+'분 남음' : '';
+}
+function roundHtml(r){
+  if(r.open) return '<div class="round"><b>지금 '+r.round+'회차 · '+esc(r.from)+'–'+esc(r.to)+'</b><span>'+(r.next ? '다음 변경 '+esc(r.next)+minsLeft(r.next) : '마지막 회차')+'</span></div>';
+  return '<div class="round"><b>'+(r.next ? '운영시간이 아니에요' : '운영이 끝났어요')+'</b><span>'+(r.next ? '다음 시작 '+esc(r.next) : '참여해 주셔서 고마워요')+'</span></div>';
+}
+function render(d){
+  var h = roundHtml(d.round);
+  h += '<div class="stats"><div class="stat"><b>'+d.players+'명</b><span>보물을 찾은 참가자</span></div><div class="stat"><b>'+d.total+'개</b><span>지금까지 찾은 보물</span></div></div>';
+  var max = Math.max(1, Math.max.apply(null, d.teams.map(function(t){ return t.score; })));
+  h += '<div class="cols"><section class="card"><h2>학년 대항전</h2><p class="note">학년별로 찾은 개수를 모두 합산</p>'+
+    d.teams.map(function(t,i){ return '<div class="team'+(i===0&&t.score>0?' lead':'')+'"><b>'+esc(t.team)+'</b><div class="track" role="img" aria-label="'+esc(t.team)+' '+t.score+'개"><div class="fill" style="width:'+(t.score/max*100)+'%"></div></div><em>'+t.score+'개<small>'+t.act+'명 참여</small></em></div>'; }).join('')+
+    '</section>';
+  h += '<section class="card"><h2>개인 순위</h2><p class="note">상위 30명 · 같은 개수면 먼저 달성한 사람이 위</p>';
+  if(d.people.length){
+    h += '<table><thead><tr><th>순위</th><th>닉네임</th><th>학년</th><th class="n">찾은 개수</th></tr></thead><tbody>'+
+      d.people.map(function(p,i){ return '<tr class="p'+(i+1)+'"><td class="rk">'+(i+1)+'</td><td>'+esc(p.nick)+'</td><td>'+esc(p.team)+'</td><td class="n"><b>'+p.hits+'</b>개</td></tr>'; }).join('')+
+      '</tbody></table>';
+  } else h += '<p class="empty">아직 보물을 찾은 사람이 없어요.<br>첫 번째 주인공이 되어보세요.</p>';
+  h += '</section></div>';
+  app.innerHTML = h;
+  stampEl.textContent = '마지막 갱신 '+String(d.stamp||'').slice(11,16)+' · 30초마다 자동 갱신';
+}
+function load(){
+  fetch(API_URL + '?api=board&a=%5B%5D&_=' + Date.now(), { redirect: 'follow' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d && d.error){ throw new Error(d.error); }
+      last = d; render(d);
+    })
+    .catch(function(){
+      if(!last) app.innerHTML = '<p class="empty err">순위를 불러오지 못했어요. 잠시 뒤 새로고침해 주세요.</p>';
+    });
+}
+load();
+setInterval(function(){ if(!document.hidden) load(); }, 30000);
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
+</script>
+</body>
+</html>

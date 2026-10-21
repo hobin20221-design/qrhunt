@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>국화 보물찾기</title>
+<title>QR 보물찾기</title>
 <style>
 :root{--paper:#F4F6F1;--surface:#FFF;--ink:#1F2B24;--muted:#65736A;--line:#DCE2D9;--leaf:#2F6B4F;--mum:#E3AC14;--mum-soft:#FBF0CF;--plum:#7A3B69;--plum-soft:#F1E4EE;--leaf-soft:#E2EDE5;--bad:#B03A2E}
 *{box-sizing:border-box}
@@ -54,7 +54,7 @@ h3{font-size:14px;margin:0 0 6px}
 </style>
 </head>
 <body>
-<header class="bar"><b>국화 보물찾기</b><button type="button" id="home">홈</button></header>
+<header class="bar"><b>QR 보물찾기</b><button type="button" id="home">홈</button></header>
 <div class="wrap" id="app"><div class="load">불러오는 중이에요</div></div>
 <div id="cam" aria-modal="true" role="dialog" aria-label="QR 찍기">
   <video id="video" playsinline muted></video>
@@ -118,7 +118,7 @@ function handle(r){
 
 /* ---------- 참가 / 로그인 ---------- */
 function renderAuth(){
-  var head = '<h1>'+(mode==='login'?'로그인':'참가하기')+'</h1><p class="sub">'+info.open+'시부터 '+info.close+'시까지, '+info.days+'일 동안 열려요</p>';
+  var head = '<h1>'+(mode==='login'?'로그인':'참가하기')+'</h1><p class="sub">'+info.days+'일 동안 '+hourText(info.open)+'부터 '+hourText(info.close)+'까지, 2시간마다 보물이 바뀌어요</p>';
   if(QR) head += '<p class="hint" style="margin:-8px 0 14px">'+esc(QR)+' QR을 찍었어요. '+(mode==='login'?'로그인':'참가')+'하면 바로 확인돼요.</p>';
   if(mode === 'login'){
     app.innerHTML = head + '<div class="card"><label for="n">닉네임</label><input id="n" autocomplete="off">'+
@@ -133,7 +133,7 @@ function renderAuth(){
     app.innerHTML = head + '<div class="card"><label for="n">닉네임</label><input id="n" maxlength="12" autocomplete="off" placeholder="순위표에 보여요">'+
       '<label>소속</label><div class="seg" id="seg">'+info.teams.map(function(t){return '<button type="button" data-t="'+esc(t)+'" class="'+(t===team?'on':'')+'">'+esc(t)+'</button>';}).join('')+'</div>'+
       '<label for="p">내 번호 4자리</label><input id="p" type="tel" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="다른 폰에서 로그인할 때 써요">'+
-      '<label class="consent"><input type="checkbox" id="ok"><span>상품을 받을 때 학생증으로 소속을 확인하고, 다르면 실격이에요. 받는 정보는 닉네임과 소속뿐이고 파일럿이 끝나면 지워요.</span></label>'+
+      '<label class="consent"><input type="checkbox" id="ok"><span>상품을 받을 때 학생증으로 소속을 확인하고, 다르면 실격이에요. 받는 정보는 닉네임과 소속뿐이고 시범운영이 끝나면 지워요.</span></label>'+
       '<p class="err" id="err"></p><button class="btn" id="go">참가하기</button>'+
       '<button class="link" id="sw">이미 참가했으면 로그인</button></div>';
     document.getElementById('seg').onclick = function(e){
@@ -157,17 +157,33 @@ function afterAuth(b){
 }
 
 /* ---------- 내 화면 ---------- */
+function nextText(r){ var n = r.round && r.round.next; return n ? n+'에 보물이 바뀌어요.' : '이번이 마지막 회차예요.'; }
+function hourText(h){ return h >= 24 ? '자정' : h+'시'; }
+/* 설정 탭의 시작일·운영일수로 '10.26~10.27, 9시~자정' 같은 문구를 만듦 */
+function periodText(){
+  if(!info || !info.start) return '';
+  var p = String(info.start).split('-'), d = new Date(+p[0], +p[1]-1, +p[2]);
+  var md = function(x){ return (x.getMonth()+1)+'.'+x.getDate(); };
+  var e = new Date(d); e.setDate(d.getDate() + Math.max(1, info.days) - 1);
+  return md(d)+(info.days > 1 ? '~'+md(e) : '')+', '+hourText(info.open)+'~'+hourText(info.close);
+}
 var MSG = {
   '발견':['hit','🌼','보물 발견',function(l,r){return l.qr+' 보물을 찾았어요. 누적 '+r.me.total+'개예요.';}],
-  '꽝':['miss','🍂','꽝',function(l){return l.qr+'는 오늘 비어 있어요. 보물 위치는 매일 바뀌어요.';}],
-  '중복':['dup','🔁','이미 찾은 보물',function(l){return l.qr+'는 오늘 이미 찾았어요. 내일 다시 도전해요.';}],
-  '마감':['full','⏱️','한발 늦었어요',function(l){return l.qr+' 보물은 오늘 선착순 '+l.cap+'명이 모두 찾아갔어요.';}],
-  '시간외':['hour','🌙','운영시간이 아니에요',function(l,r){return '보물은 '+r.open+'시부터 '+r.close+'시까지만 찾을 수 있어요.';}],
-  '기간외':['day','📅','운영 기간이 아니에요',function(){return '파일럿 기간에만 보물을 찾을 수 있어요.';}]
+  '꽝':['miss','🍂','꽝',function(l,r){return l.qr+'는 이번 회차에 비어 있어요. '+nextText(r);}],
+  '중복':['dup','🔁','이미 찾은 보물',function(l,r){return l.qr+'는 이번 회차에 이미 찾았어요. '+nextText(r);}],
+  '마감':['full','⏱️','한발 늦었어요',function(l){return l.qr+' 보물은 이번 회차 선착순 '+l.cap+'명이 모두 찾아갔어요.';}],
+  '시간외':['hour','🌙','운영시간이 아니에요',function(l,r){return '보물은 '+hourText(r.open)+'부터 '+hourText(r.close)+'까지만 찾을 수 있어요.';}],
+  '기간외':['day','📅','시범운영 기간이 아니에요',function(){return '시범운영 기간('+periodText()+')에만 보물을 찾을 수 있어요.';}]
 };
+function roundLine(r){
+  var x = r.round;
+  if(!x) return r.day+'일차 / '+r.days+'일';
+  if(x.open) return x.round+'회차 / '+x.rounds+' · '+(x.next ? '다음 변경 '+x.next : '마지막 회차');
+  return x.next ? '다음 시작 '+x.next : '운영 종료';
+}
 function renderStatus(r){
   var m = r.me, h = '';
-  h += '<div class="top"><div><b>'+esc(m.nick)+'</b><span class="chip">'+esc(m.team)+'</span></div><span class="hint">'+r.day+'일차 / '+r.days+'일</span></div>';
+  h += '<div class="top"><div><b>'+esc(m.nick)+'</b><span class="chip">'+esc(m.team)+'</span></div><span class="hint">'+esc(roundLine(r))+'</span></div>';
   if(last && last.note){
     h += '<div class="result note '+(last.fresh?'fresh':'')+'"><b style="font-size:16px;color:var(--bad)">'+esc(last.note)+'</b><p>건물에 붙은 QR을 다시 찍어 주세요.</p></div>';
   } else if(last && MSG[last.result]){
@@ -179,9 +195,11 @@ function renderStatus(r){
   h += '<div class="score"><div><b>'+m.total+'</b><span>내 보물, 누적</span></div><div><b>'+m.today+'</b><span>오늘 찾은 보물</span></div></div>';
   var my = r.teams.map(function(t){return t.team;}).indexOf(m.team)+1;
   h += '<div class="card"><h3>학년 대항전'+(my?', 우리 '+my+'위':'')+'</h3>'+
-    r.teams.map(function(t,i){return '<div class="r'+(t.team===m.team?' mine':'')+'"><span>'+(i+1)+'. '+esc(t.team)+'</span><span>1인 평균 '+t.score.toFixed(1)+'개</span></div>';}).join('')+'</div>';
+    r.teams.map(function(t,i){return '<div class="r'+(t.team===m.team?' mine':'')+'"><span>'+(i+1)+'. '+esc(t.team)+'</span><span>합계 '+t.score+'개</span></div>';}).join('')+'</div>';
   h += '<div class="card"><h3>개인 순위'+(m.rank?', 나는 '+m.rank+'위':'')+'</h3>'+
     (r.top.length? r.top.map(function(p,i){return '<div class="r'+(p.mine?' mine':'')+'"><span>'+(i+1)+'. '+esc(p.nick)+'</span><span>'+p.hits+'개</span></div>';}).join('') : '<p class="hint">첫 보물의 주인공이 되어보세요.</p>')+'</div>';
+  h += '<a class="btn" href="rank.html" style="display:block;text-align:center;text-decoration:none;background:var(--surface);color:var(--ink);border:1px solid var(--line)">전체 순위 보기</a>';
+  h += '<p class="hint" style="text-align:center;margin-top:12px">보물은 2시간마다 새로 바뀌어요. 같은 QR도 다음 회차에 다시 깨어날 수 있어요.</p>';
   h += '<button class="link" id="out">로그아웃</button>';
   app.innerHTML = h;
   document.getElementById('scanbtn').onclick = openCam;
