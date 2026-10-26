@@ -95,6 +95,12 @@ function kakaoBox(mini){
 }
 var app = document.getElementById('app');
 var info = null, team = null, mode = 'join', last = null;
+/* 카톡 안 브라우저로 열리면 기본 브라우저(사파리·크롬)로 넘김
+   → 폰 기본 카메라로 QR을 찍어도 같은 브라우저라 로그인이 유지됨 */
+var OUT = /KAKAOTALK/i.test(navigator.userAgent);
+if(OUT){
+  location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href);
+}
 var QR = cleanQr(new URLSearchParams(location.search).get('qr'));
 if (QR) history.replaceState(null, '', location.pathname);
 
@@ -337,6 +343,9 @@ document.getElementById('home').onclick = function(){
 
 if(API_URL.indexOf('여기에') >= 0){
   app.innerHTML = '<div class="card"><p class="err">아직 서버 주소가 안 들어갔어요.</p><p class="hint">index.html 위쪽 API_URL에 Apps Script 배포 주소를 넣어 주세요.</p></div>';
+} else if(OUT){
+  app.innerHTML = '<div class="card"><b>기본 브라우저로 여는 중이에요</b><p class="hint" style="margin-top:6px">카톡 안에서는 로그인이 따로 저장돼요. 사파리나 크롬으로 열리지 않으면 오른쪽 아래 ⋯(또는 공유) 버튼을 눌러 \'다른 브라우저로 열기\'를 선택해 주세요.</p></div>';
+  setTimeout(function(){ OUT = false; QR = ''; start(); }, 2500);
 } else start();
 </script>
 </body>
