@@ -200,8 +200,8 @@ function periodText(){
 }
 var MSG = {
   '발견':['hit','🌼','보물 발견',function(l,r){return l.qr+' 보물을 찾았어요. 누적 '+r.me.total+'개예요.';}],
-  '꽝':['miss','🍂','꽝',function(l,r){return l.qr+'는 이번 회차에 비어 있어요. '+nextText(r);}],
-  '중복':['dup','🔁','이미 찾은 보물',function(l,r){return l.qr+'는 이번 회차에 이미 찾았어요. '+nextText(r);}],
+  '꽝':['miss','🍂','꽝',function(l,r){return l.qr+'는 이번 회차 보물이 아니에요. '+nextText(r);}],
+  '중복':['dup','🌼','보물 맞아요! (이미 찾음)',function(l,r){return l.qr+'는 이번 회차 보물이 맞아요. 이번 회차에 이미 1개로 세서 개수는 그대로예요. '+nextText(r);}],
   '마감':['full','⏱️','한발 늦었어요',function(l){return l.qr+' 보물은 이번 회차 선착순 '+l.cap+'명이 모두 찾아갔어요.';}],
   '시간외':['hour','🌙','운영시간이 아니에요',function(l,r){return '보물은 '+hourText(r.open)+'부터 '+hourText(r.close)+'까지만 찾을 수 있어요.';}],
   '기간외':['day','📅','시범운영 기간이 아니에요',function(){return '시범운영 기간('+periodText()+')에만 보물을 찾을 수 있어요.';}]
