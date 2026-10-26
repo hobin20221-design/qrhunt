@@ -44,6 +44,12 @@ h3{font-size:14px;margin:0 0 6px}
 .r{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-bottom:1px solid var(--line)}
 .r:last-child{border-bottom:0}.r.mine{font-weight:700}
 .hint{color:var(--muted);font-size:13px;margin:0}
+.kakao{display:block;background:#FEE500;color:#191600;border-radius:16px;padding:15px 16px;margin-bottom:12px;text-decoration:none}
+.kakao b{display:block;font-size:16px;margin-bottom:3px}
+.kakao p{margin:0 0 10px;font-size:13.5px;line-height:1.45;color:#3C3500}
+.kakao span{display:block;text-align:center;background:#191600;color:#FEE500;border-radius:11px;padding:11px;font-weight:700;font-size:15px}
+.kakao.mini{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;font-size:14px;font-weight:700}
+.kakao.mini span{display:inline;background:none;color:#191600;padding:0;font-size:14px}
 .load{text-align:center;color:var(--muted);padding:60px 0}
 #cam{position:fixed;inset:0;z-index:20;background:#000;display:none;flex-direction:column;overflow:hidden;touch-action:none}
 #cam.on{display:flex}
@@ -79,6 +85,14 @@ var API_URL = 'https://script.google.com/macros/s/AKfycbxg6erW2PqRI4ypkY9MXjvJ3I
 /* ========================================================================== */
 
 var KEY = 'qrhunt-token';
+/* 오픈채팅: 순위 공개·당첨자 발표·공지 */
+var KAKAO = 'https://open.kakao.com/o/gEHbrsTi';
+function kakaoSeen(){ try{ return localStorage.getItem('qrhunt-kakao') === '1'; }catch(e){ return false; } }
+function kakaoBox(mini){
+  var a = '<a class="kakao'+(mini?' mini':'')+'" href="'+KAKAO+'" target="_blank" rel="noopener" onclick="try{localStorage.setItem(\'qrhunt-kakao\',\'1\')}catch(e){}">';
+  if(mini) return a+'💬 오픈채팅 공지방<span>바로가기 →</span></a>';
+  return a+'<b>💬 오픈채팅방에 꼭 들어와 주세요</b><p>중간 순위 공개, 당첨자 발표, 시상 안내, 운영 공지는 모두 오픈채팅방에서 해요. 안 들어오면 당첨돼도 연락을 못 받아요!</p><span>오픈채팅 바로 들어가기 →</span></a>';
+}
 var app = document.getElementById('app');
 var info = null, team = null, mode = 'join', last = null;
 var QR = cleanQr(new URLSearchParams(location.search).get('qr'));
@@ -135,7 +149,7 @@ function renderAuth(){
     app.innerHTML = head + '<div class="card"><label for="n">닉네임</label><input id="n" autocomplete="off">'+
       '<label for="p">내 번호 4자리</label><input id="p" type="tel" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="참가할 때 정한 번호">'+
       '<p class="err" id="err"></p><button class="btn" id="go">로그인</button>'+
-      '<button class="link" id="sw">처음이면 참가하기</button></div>';
+      '<button class="link" id="sw">처음이면 참가하기</button></div>' + kakaoBox(true);
     document.getElementById('go').onclick = function(){
       var b=this; b.disabled=true;
       call('resume',[val('n'),val('p')],afterAuth(b));
@@ -146,7 +160,7 @@ function renderAuth(){
       '<label for="p">내 번호 4자리</label><input id="p" type="tel" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="다른 폰에서 로그인할 때 써요">'+
       '<label class="consent"><input type="checkbox" id="ok"><span>상품을 받을 때 학생증으로 소속을 확인하고, 다르면 실격이에요. 받는 정보는 닉네임과 소속뿐이고 시범운영이 끝나면 지워요.</span></label>'+
       '<p class="err" id="err"></p><button class="btn" id="go">참가하기</button>'+
-      '<button class="link" id="sw">이미 참가했으면 로그인</button></div>';
+      '<button class="link" id="sw">이미 참가했으면 로그인</button></div>' + kakaoBox(true);
     document.getElementById('seg').onclick = function(e){
       var t = e.target.getAttribute('data-t'); if(!t) return;
       team = t; [].forEach.call(this.children,function(c){ c.className = c.getAttribute('data-t')===t?'on':''; });
@@ -203,6 +217,7 @@ function renderStatus(r){
   }
   if(last) last.fresh = false;
   h += '<button class="btn scan" id="scanbtn" type="button"><span aria-hidden="true">📷</span> QR 찍기</button>';
+  h += kakaoBox(kakaoSeen());
   h += '<div class="score"><div><b>'+m.total+'</b><span>내 보물, 누적</span></div><div><b>'+m.today+'</b><span>오늘 찾은 보물</span></div></div>';
   var my = r.teams.map(function(t){return t.team;}).indexOf(m.team)+1;
   h += '<div class="card"><h3>학년 대항전'+(my?', 우리 '+my+'위':'')+'</h3>'+
