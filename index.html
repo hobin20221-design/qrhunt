@@ -45,12 +45,18 @@ h3{font-size:14px;margin:0 0 6px}
 .r:last-child{border-bottom:0}.r.mine{font-weight:700}
 .hint{color:var(--muted);font-size:13px;margin:0}
 .load{text-align:center;color:var(--muted);padding:60px 0}
-#cam{position:fixed;inset:0;z-index:20;background:#000;display:none;flex-direction:column}
+#cam{position:fixed;inset:0;z-index:20;background:#000;display:none;flex-direction:column;overflow:hidden;touch-action:none}
 #cam.on{display:flex}
-#cam video{flex:1;width:100%;object-fit:cover}
+#cam video{flex:1;width:100%;min-height:0;object-fit:cover;transform-origin:50% 50%;transition:transform .12s}
+#cam .zoombar{position:absolute;left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.5);border-radius:14px;padding:8px 10px}
+#cam .zoombar button{min-width:46px;height:40px;border:1px solid rgba(255,255,255,.6);background:transparent;color:#fff;border-radius:10px;font:inherit;font-size:15px;font-weight:700}
+#cam .zoombar button.on{background:#fff;color:#1F2B24;border-color:#fff}
+#cam .zoombar input{flex:1;min-width:0;margin:0;padding:0;border:0;background:none;accent-color:#E3AC14;height:40px}
+#cam .zoombar .zv{color:#fff;font-weight:700;font-size:14px;min-width:38px;text-align:right}
 #cam .frame{position:absolute;left:50%;top:45%;width:min(68vw,300px);aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid #fff;border-radius:22px;box-shadow:0 0 0 100vmax rgba(0,0,0,.45)}
 #cam .msg{position:absolute;left:0;right:0;top:calc(45% + min(34vw,150px) + 20px);text-align:center;color:#fff;font-size:15px;padding:0 20px}
 #cam .close{position:absolute;left:16px;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));border:0;border-radius:13px;padding:14px;font:inherit;font-weight:700;background:#fff;color:#1F2B24}
+@media (max-height:680px){#cam .frame{top:38%;width:min(68vw,300px,46vh)}#cam .msg{margin:0;top:calc(38% + min(34vw,150px,23vh) + 14px)}}
 </style>
 </head>
 <body>
@@ -60,6 +66,11 @@ h3{font-size:14px;margin:0 0 6px}
   <video id="video" playsinline muted></video>
   <div class="frame"></div>
   <p class="msg" id="cammsg">QR을 네모 안에 맞춰 주세요</p>
+  <div class="zoombar" id="zoombar">
+    <button type="button" data-z="1">1×</button><button type="button" data-z="2">2×</button><button type="button" data-z="3">3×</button>
+    <input type="range" id="zoom" min="1" max="4" step="0.1" value="1" aria-label="카메라 확대">
+    <span class="zv" id="zv">1.0×</span>
+  </div>
   <button class="close" id="camclose" type="button">닫기</button>
 </div>
 <script>
@@ -209,6 +220,28 @@ function renderStatus(r){
 /* ---------- 페이지 안 QR 스캐너 ---------- */
 var cam = document.getElementById('cam'), video = document.getElementById('video'), cammsg = document.getElementById('cammsg');
 var stream = null, detector = null, looping = false, canvas = document.createElement('canvas'), ctx = canvas.getContext('2d', { willReadFrequently: true });
+/* 확대: 카메라가 줌을 지원하면 실제 줌(hw), 아니면 화면 가운데를 잘라 키우는 디지털 줌 */
+var zoomEl = document.getElementById('zoom'), zvEl = document.getElementById('zv'), zoombar = document.getElementById('zoombar');
+var zoom = 1, hw = null, track = null, pinch = null;
+function setZoom(z){
+  var max = +zoomEl.max || 4;
+  z = Math.max(1, Math.min(max, Math.round(z * 10) / 10));
+  zoom = z; zoomEl.value = z; zvEl.textContent = z.toFixed(1) + '×';
+  [].forEach.call(zoombar.querySelectorAll('[data-z]'), function(b){ b.className = (+b.getAttribute('data-z') === z) ? 'on' : ''; });
+  if(hw && track){
+    video.style.transform = '';
+    track.applyConstraints({ advanced: [{ zoom: Math.max(hw.min, Math.min(hw.max, z)) }] })
+      .catch(function(){ hw = null; video.style.transform = zoom > 1 ? 'scale(' + zoom + ')' : ''; });
+  } else {
+    video.style.transform = z > 1 ? 'scale(' + z + ')' : '';
+  }
+}
+zoomEl.oninput = function(){ setZoom(+this.value); };
+zoombar.onclick = function(e){ var z = e.target.getAttribute && e.target.getAttribute('data-z'); if(z) setZoom(+z); };
+function touchDist(t){ var dx = t[0].clientX - t[1].clientX, dy = t[0].clientY - t[1].clientY; return Math.sqrt(dx * dx + dy * dy) || 1; }
+cam.addEventListener('touchstart', function(e){ if(e.touches.length === 2) pinch = { d: touchDist(e.touches), z: zoom }; }, { passive: true });
+cam.addEventListener('touchmove', function(e){ if(pinch && e.touches.length === 2){ e.preventDefault(); setZoom(pinch.z * touchDist(e.touches) / pinch.d); } }, { passive: false });
+cam.addEventListener('touchend', function(e){ if(e.touches.length < 2) pinch = null; });
 function loadJsQR(cb){
   if(window.jsQR) return cb();
   var s = document.createElement('script');
@@ -223,10 +256,18 @@ function openCam(){
   }
   cammsg.textContent = 'QR을 네모 안에 맞춰 주세요';
   cam.className = 'on';
+  hw = null; track = null; zoomEl.max = 4; setZoom(1);
   if('BarcodeDetector' in window){ try{ detector = new BarcodeDetector({ formats: ['qr_code'] }); }catch(e){ detector = null; } }
   loadJsQR(function(){
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }).then(function(s){
-      stream = s; video.srcObject = s; video.play(); looping = true; requestAnimationFrame(tick);
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false }).then(function(s){
+      stream = s; video.srcObject = s; video.play();
+      track = s.getVideoTracks()[0] || null;
+      try{
+        var caps = track && track.getCapabilities ? track.getCapabilities() : null;
+        if(caps && caps.zoom && caps.zoom.max > 1){ hw = caps.zoom; zoomEl.max = Math.max(2, Math.min(hw.max, 5)); }
+      }catch(e){ hw = null; }
+      setZoom(1);
+      looping = true; requestAnimationFrame(tick);
     }).catch(function(){
       cammsg.textContent = '카메라 권한이 필요해요. 브라우저 설정에서 카메라를 허용하거나, 휴대폰 카메라 앱으로 QR을 찍어 주세요.';
     });
@@ -236,6 +277,7 @@ function closeCam(){
   looping = false;
   if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream = null; }
   video.srcObject = null; cam.className = '';
+  track = null; hw = null; pinch = null; zoom = 1; video.style.transform = '';
 }
 document.getElementById('camclose').onclick = closeCam;
 function found(text){
@@ -248,18 +290,23 @@ function found(text){
 function tick(){
   if(!looping) return;
   if(video.readyState >= 2){
-    if(detector){
-      detector.detect(video).then(function(c){ if(c.length && found(c[0].rawValue)) return; requestAnimationFrame(tick); })
-        .catch(function(){ detector = null; requestAnimationFrame(tick); });
-      return;
-    }
-    if(window.jsQR){
-      var w = video.videoWidth, h = video.videoHeight, k = Math.min(1, 640 / Math.max(w, h));
-      canvas.width = Math.round(w * k); canvas.height = Math.round(h * k);
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      var code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
-      if(code && code.data && found(code.data)) return;
+    var digital = !hw && zoom > 1;
+    var onCodes = function(c){ if(c.length && found(c[0].rawValue)) return; requestAnimationFrame(tick); };
+    var onFail = function(){ detector = null; requestAnimationFrame(tick); };
+    if(detector && !digital){ detector.detect(video).then(onCodes).catch(onFail); return; }
+    var w = video.videoWidth, h = video.videoHeight;
+    if(w && h){
+      /* 디지털 줌이면 화면에 보이는 가운데 부분만 잘라서 인식 → 작은 QR도 더 선명하게 읽힘 */
+      var f = digital ? zoom : 1, sw = w / f, sh = h / f, sx = (w - sw) / 2, sy = (h - sh) / 2;
+      var k = Math.min(1, 800 / Math.max(sw, sh));
+      canvas.width = Math.round(sw * k); canvas.height = Math.round(sh * k);
+      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+      if(detector){ detector.detect(canvas).then(onCodes).catch(onFail); return; }
+      if(window.jsQR){
+        var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+        if(code && code.data && found(code.data)) return;
+      }
     }
   }
   requestAnimationFrame(tick);
