@@ -52,7 +52,7 @@ tr.p1 td.rk,tr.p2 td.rk,tr.p3 td.rk{font-family:"Black Han Sans","Noto Sans KR",
   <h1>QR 보물찾기<br>실시간 순위</h1>
   <div id="app"><p class="empty">순위를 불러오는 중이에요</p></div>
   <div class="foot">
-    <span id="stamp">같은 개수면 먼저 달성한 사람이 위예요 · 30초마다 자동 갱신</span>
+    <span id="stamp">같은 개수면 먼저 달성한 사람이 위예요 · 1분마다 자동 갱신</span>
     <a class="go" href="./">참가하러 가기</a>
   </div>
 </main>
@@ -87,7 +87,7 @@ function render(d){
   } else h += '<p class="empty">아직 보물을 찾은 사람이 없어요.<br>첫 번째 주인공이 되어보세요.</p>';
   h += '</section></div>';
   app.innerHTML = h;
-  stampEl.textContent = '마지막 갱신 '+String(d.stamp||'').slice(11,16)+' · 30초마다 자동 갱신';
+  stampEl.textContent = '마지막 갱신 '+String(d.stamp||'').slice(11,16)+' · 1분마다 자동 갱신';
 }
 function load(){
   fetch(API_URL + '?api=board&a=%5B%5D&_=' + Date.now(), { redirect: 'follow' })
@@ -101,7 +101,7 @@ function load(){
     });
 }
 load();
-setInterval(function(){ if(!document.hidden) load(); }, 30000);
+setInterval(function(){ if(!document.hidden) load(); }, 60000);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
 </script>
 </body>

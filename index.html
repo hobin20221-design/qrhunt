@@ -110,15 +110,24 @@ function setTok(t){ try{ if(t) localStorage.setItem(KEY,t); else localStorage.re
 function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function val(id){ return document.getElementById(id).value.trim(); }
 
-function call(fn, args, ok){
+/* 서버 호출: 25초 넘게 응답이 없으면 실패로 처리 (무한 '확인 중' 방지) */
+function call(fn, args, ok, fail){
   var url = API_URL + '?api=' + fn + '&a=' + encodeURIComponent(JSON.stringify(args)) + '&_=' + Date.now();
-  fetch(url, { redirect: 'follow' })
+  var ctl = window.AbortController ? new AbortController() : null, done = false;
+  var timer = setTimeout(function(){ if(ctl) ctl.abort(); onFail(); }, 25000);
+  function onFail(){
+    if(done) return; done = true; clearTimeout(timer);
+    if(fail) return fail();
+    var b = document.getElementById('go'); if(b){ b.disabled = false; }
+    if(!b || !document.getElementById('err')){
+      app.innerHTML = '<div class="card"><p class="err">연결이 잠깐 끊겼어요.</p><p class="hint">사람이 몰리면 서버 응답이 늦어질 수 있어요. 아래 버튼을 눌러 다시 불러와 주세요.</p><button class="btn" id="retry" style="margin-top:12px">다시 불러오기</button></div>';
+      document.getElementById('retry').onclick = function(){ app.innerHTML = '<div class="load">불러오는 중이에요</div>'; if(!info) start(); else if(getTok()) refresh(); else renderAuth(); };
+    } else document.getElementById('err').textContent = '연결이 잠깐 끊겼어요. 다시 눌러 주세요.';
+  }
+  fetch(url, ctl ? { redirect: 'follow', signal: ctl.signal } : { redirect: 'follow' })
     .then(function(r){ return r.json(); })
-    .then(ok)
-    .catch(function(){
-      app.insertAdjacentHTML('afterbegin','<p class="err">연결이 잠깐 끊겼어요. 잠시 뒤 다시 시도해 주세요.</p>');
-      var b = document.getElementById('go'); if(b) b.disabled = false;
-    });
+    .then(function(j){ if(done) return; done = true; clearTimeout(timer); ok(j); })
+    .catch(onFail);
 }
 
 function start(){
@@ -136,10 +145,22 @@ function refresh(){
     renderStatus(r);
   });
 }
-function doScan(q){
+function doScan(q, retry){
   QR = '';
-  app.innerHTML = '<div class="load">'+esc(q)+' 확인 중이에요</div>';
-  call('scan',[getTok(),q],function(r){ if(r && !r.error) last = {result:r.result, qr:r.qr, cap:r.cap, fresh:true}; handle(r); });
+  app.innerHTML = '<div class="load">'+esc(q)+' 확인 중이에요'+(retry ? '<br><span class="hint">응답이 늦어 한 번 더 확인하고 있어요</span>' : '<br><span class="hint">사람이 많으면 몇 초 걸릴 수 있어요</span>')+'</div>';
+  call('scan',[getTok(),q],function(r){
+    if(r && !r.error){
+      /* 첫 시도는 기록됐는데 응답만 못 받은 경우: 재시도하면 '중복'이 나오므로 발견으로 보여줌 */
+      var res = (retry && r.result === '중복') ? '발견' : r.result;
+      last = {result:res, qr:r.qr, cap:r.cap, fresh:true};
+    }
+    handle(r);
+  }, function(){
+    if(!retry) return setTimeout(function(){ doScan(q, true); }, 1500);
+    last = {note:'결과를 받는 중에 연결이 끊겼어요', sub:'찍은 기록은 서버에 남았을 수 있어요. 아래 내 보물 개수를 확인하고, 안 올랐으면 같은 QR을 다시 찍어 주세요. 두 번 세지는 않아요.', fresh:true};
+    app.innerHTML = '<div class="load">내 기록 불러오는 중이에요</div>';
+    refresh();
+  });
 }
 function handle(r){
   if(r && r.error === 'login'){ setTok(null); return renderAuth(); }
@@ -216,7 +237,7 @@ function renderStatus(r){
   var m = r.me, h = '';
   h += '<div class="top"><div><b>'+esc(m.nick)+'</b><span class="chip">'+esc(m.team)+'</span></div><span class="hint">'+esc(roundLine(r))+'</span></div>';
   if(last && last.note){
-    h += '<div class="result note '+(last.fresh?'fresh':'')+'"><b style="font-size:16px;color:var(--bad)">'+esc(last.note)+'</b><p>건물에 붙은 QR을 다시 찍어 주세요.</p></div>';
+    h += '<div class="result note '+(last.fresh?'fresh':'')+'"><b style="font-size:16px;color:var(--bad)">'+esc(last.note)+'</b><p>'+esc(last.sub || '건물에 붙은 QR을 다시 찍어 주세요.')+'</p></div>';
   } else if(last && MSG[last.result]){
     var x = MSG[last.result];
     h += '<div class="result '+x[0]+' '+(last.fresh?'fresh':'')+'"><span class="f">'+x[1]+'</span><b>'+x[2]+'</b><p>'+esc(x[3](last,r))+'</p></div>';
