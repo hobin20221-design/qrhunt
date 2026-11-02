@@ -46,6 +46,38 @@ h1{font-size:22px;margin:0 0 4px}
 .mine .r:last-child{border-bottom:0}
 .st{font-size:12px;font-weight:700;border-radius:999px;padding:1px 9px}
 .st.대기{background:#EEF1F5;color:var(--sub)}.st.공개{background:#E6F7F0;color:#1E8A5F}.st.반려{background:#FDECEB;color:var(--bad)}
+/* 참여 단계 */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.steps div{background:#F7F8FA;border-radius:14px;padding:10px;font-size:12.5px;color:var(--sub);position:relative}
+.steps div b{display:block;font-size:13.5px;color:var(--ink);margin:4px 0 2px}
+.steps div em{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-style:normal;font-size:12px;font-weight:800}
+.steps div.ok{background:#E6F7F0}.steps div.ok em{background:var(--mint)}
+.steps div.todo{background:var(--yellow-soft)}
+.places{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.places span{background:#fff;border-radius:999px;padding:1px 8px;font-size:11.5px;color:var(--ink)}
+@media(max-width:420px){.steps{grid-template-columns:1fr}}
+/* 사진 카드 상태 */
+.badge{position:absolute;right:8px;bottom:8px;font-size:12px;font-weight:800;border-radius:999px;padding:2px 9px;background:var(--pink);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.badge.own{background:rgba(30,35,41,.8)}
+.ph{cursor:pointer}
+/* 크게 보기·투표 */
+.view img{width:100%;border-radius:14px;display:block;background:#EEF1F5;max-height:60vh;object-fit:contain}
+.view h2{font-size:19px;margin:12px 0 2px}
+.vbtn{width:100%;border:0;border-radius:14px;padding:15px;font:inherit;font-size:16px;font-weight:800;background:var(--pink);color:#fff;margin-top:12px;cursor:pointer}
+.vbtn.done{background:#E6F7F0;color:#1E8A5F}.vbtn.gray{background:#EEF1F5;color:var(--sub)}
+.vbtn:disabled{cursor:default}
+.ask{background:var(--pink-soft);border-radius:14px;padding:14px;margin-top:12px;text-align:center}
+.ask b{display:block;font-size:16px}
+.ask p{margin:4px 0 10px;font-size:13.5px;color:var(--sub)}
+.ask .row{display:flex;gap:8px}.ask .row button{flex:1}
+.boom{position:fixed;inset:0;z-index:40;display:grid;place-items:center;pointer-events:none}
+.boom div{background:rgba(255,255,255,.96);border-radius:24px;padding:22px 30px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.15)}
+.boom i{display:block;font-style:normal;font-size:64px;line-height:1}
+.boom b{display:block;font-size:20px;margin-top:6px}
+.boom span{font-size:14px;color:var(--sub)}
+@media (prefers-reduced-motion:no-preference){.boom div{animation:boom .9s cubic-bezier(.2,1.5,.4,1)}.boom i{animation:beat .9s ease}}
+@keyframes boom{from{transform:scale(.5);opacity:0}to{transform:none;opacity:1}}
+@keyframes beat{0%{transform:scale(.6)}40%{transform:scale(1.25)}70%{transform:scale(.95)}100%{transform:none}}
 /* 시트(모달) */
 .sheet{position:fixed;inset:0;z-index:20;background:rgba(15,20,25,.45);display:none;align-items:flex-end;justify-content:center}
 .sheet.on{display:flex}
@@ -114,23 +146,29 @@ function render(){
   var c = C(), h = '';
   h += '<div class="tabs">'+L.list.map(function(x){ return '<button data-c="'+esc(x.id)+'" class="'+(x.id===cur?'on':'')+'">'+esc(x.name)+' <span style="opacity:.6">'+x.count+'</span></button>'; }).join('')+'</div>';
   h += '<div class="card"><h1>'+esc(c.name)+(c.state!=='진행'?' <span class="st 대기">'+esc(c.state)+'</span>':'')+'</h1><p class="desc">'+esc(c.desc)+'</p>';
-  if(c.authNames.length) h += '<div class="auth'+(L.me && !c.canUpload ? ' no' : '')+'">📍 '+esc(c.authNames.join(', '))+' 중 한 곳의 QR을 찍은 사람만 올릴 수 있어요'+(L.me ? (c.canUpload ? ' · 인증 완료 ✓' : ' · 아직 인증 전이에요') : '')+'</div>';
+  /* 참여 방법 3단계 + 내 진행 상태 */
+  var s1 = !c.authNames.length ? 'ok' : (L.me ? (c.canUpload ? 'ok' : 'todo') : ''), s2 = L.me && c.myUploads ? 'ok' : '', s3 = L.me && c.votesLeft < c.maxVote ? 'ok' : '';
+  h += '<div class="steps">'+
+    '<div class="'+s1+'"><em>'+(s1==='ok'?'✓':'1')+'</em><b>현장 QR 찍기</b>'+(c.authNames.length ? '아래 중 한 곳 QR을 찍으면 인증돼요'+(L.me ? (c.canUpload ? ' · 인증 완료' : ' · 아직 안 찍었어요') : '')+'<div class="places">'+c.authNames.map(function(n){ return '<span>📍 '+esc(n)+'</span>'; }).join('')+'</div>' : 'QR 인증 없이 누구나 올릴 수 있어요')+'</div>'+
+    '<div class="'+s2+'"><em>'+(s2?'✓':'2')+'</em><b>사진 올리기</b>1인 '+c.maxUp+'장까지'+(L.me ? ' · '+c.myUploads+'장 올림' : '')+'. 운영자가 확인한 뒤 공개돼요</div>'+
+    '<div class="'+s3+'"><em>'+(s3?'✓':'3')+'</em><b>투표하기</b>사진을 눌러 투표. 하루 '+c.maxVote+'표'+(L.me ? ' · 오늘 '+c.votesLeft+'표 남음' : '')+'</div></div>';
   h += '<div class="acts"><button class="btn" id="up"'+(c.state!=='진행'?' disabled':'')+'>📸 사진 올리기</button>'+
-    (L.me ? '<span class="left">오늘 남은 투표 <b>'+c.votesLeft+'</b>/'+c.maxVote+' · 올린 사진 '+c.myUploads+'/'+c.maxUp+'</span>' : '<span class="left">투표는 1인 하루 '+c.maxVote+'표</span>')+
+    (L.me ? '<span class="left">남은 투표 <b>'+c.votesLeft+'</b>/'+c.maxVote+'</span>' : '<span class="left">로그인하면 투표할 수 있어요</span>')+
     '<span class="sort"><button data-o="top" class="'+(sort==='top'?'on':'')+'">인기순</button><button data-o="new" class="'+(sort==='new'?'on':'')+'">최신순</button></span></div></div>';
   if(G.photos.length){
     h += '<div class="grid">'+G.photos.map(function(p,i){
-      var dis = !L.me || p.own || p.voted || !c.votesLeft || c.state!=='진행';
-      return '<div class="ph"><div style="position:relative">'+(sort==='top' && i<3 && p.votes ? '<span class="rank">'+(i+1)+'위</span>' : '')+'<div class="img" style="background-image:url(\''+esc(p.img)+'\')" role="img" aria-label="'+esc(p.title)+'"></div></div>'+
+      return '<div class="ph" data-p="'+esc(p.id)+'"><div style="position:relative">'+(sort==='top' && i<3 && p.votes ? '<span class="rank">'+(i+1)+'위</span>' : '')+
+        (p.voted ? '<span class="badge">✓ 투표 완료</span>' : p.own ? '<span class="badge own">내 사진</span>' : '')+
+        '<div class="img" style="background-image:url(\''+esc(p.img)+'\')" role="img" aria-label="'+esc(p.title)+'"></div></div>'+
         '<div class="t"><b>'+esc(p.title)+'</b><small>'+esc(p.nick)+(p.team && p.team!=='기타' ? ' · '+esc(p.team) : '')+'</small>'+
-        '<div class="v"><small>'+(p.own?'내 사진':'')+'</small><button data-v="'+esc(p.id)+'" class="'+(p.voted?'on':'')+'"'+(dis && !(!L.me) ? ' disabled' : '')+'>♥ '+p.votes+'</button></div></div></div>';
+        '<div class="v"><small>'+(p.voted ? '투표했어요' : '')+'</small><button class="'+(p.voted?'on':'')+'" tabindex="-1">♥ '+p.votes+'</button></div></div></div>';
     }).join('')+'</div>';
   } else h += '<div class="empty">아직 공개된 사진이 없어요.<br>첫 번째로 자랑해 보세요!</div>';
   if(L.me) h += '<div class="card mine" id="mine" style="margin-top:12px"><b>내가 올린 사진</b><div id="minelist" class="left" style="margin-top:6px">불러오는 중…</div></div>';
   app.innerHTML = h;
   [].forEach.call(app.querySelectorAll('[data-c]'), function(b){ b.onclick = function(){ cur = b.getAttribute('data-c'); app.innerHTML = '<div class="load">불러오는 중이에요</div>'; loadGallery(); }; });
   [].forEach.call(app.querySelectorAll('[data-o]'), function(b){ b.onclick = function(){ sort = b.getAttribute('data-o'); loadGallery(); }; });
-  [].forEach.call(app.querySelectorAll('[data-v]'), function(b){ b.onclick = function(){ if(!L.me) return openAuth(); doVote(b.getAttribute('data-v'), b); }; });
+  [].forEach.call(app.querySelectorAll('[data-p]'), function(b){ b.onclick = function(){ openView(b.getAttribute('data-p')); }; });
   document.getElementById('up').onclick = function(){ if(!L.me) return openAuth(true); if(!c.canUpload) return toast('먼저 인증 QR을 찍어 주세요.'); openUpload(); };
   if(L.me) call('myPhotos', [tok()], function(r){
     var el = document.getElementById('minelist'); if(!el) return;
@@ -138,14 +176,35 @@ function render(){
     el.innerHTML = (r.photos||[]).length ? r.photos.map(function(p){ return '<div class="r"><span>'+esc(p.title)+' <small class="left">'+esc(names[p.cid]||p.cid)+'</small>'+(p.memo?'<br><small style="color:var(--bad)">'+esc(p.memo)+'</small>':'')+'</span><span><span class="st '+esc(p.st)+'">'+esc(p.st)+'</span>'+(p.st==='공개'?' ♥'+p.votes:'')+'</span></div>'; }).join('') : '아직 올린 사진이 없어요. 운영자가 확인한 뒤 공개돼요.';
   });
 }
-function doVote(pid, b){
-  b.disabled = true;
+function openView(pid, asking){
+  var p = G.photos.filter(function(x){ return x.id === pid; })[0], c = C(); if(!p) return;
+  var act;
+  if(!L.me) act = '<button class="vbtn" id="va">로그인하고 투표하기</button>';
+  else if(p.own) act = '<button class="vbtn gray" disabled>내 사진에는 투표할 수 없어요</button>';
+  else if(p.voted) act = '<button class="vbtn done" disabled>✓ 투표 완료한 사진이에요</button>';
+  else if(c.state !== '진행') act = '<button class="vbtn gray" disabled>투표가 끝난 대회예요</button>';
+  else if(!c.votesLeft) act = '<button class="vbtn gray" disabled>오늘 투표권을 다 썼어요 (내일 '+c.maxVote+'표 다시 생겨요)</button>';
+  else if(asking) act = '<div class="ask"><b>이 사진에 투표할까요?</b><p>오늘 남은 투표 <b style="display:inline;font-size:inherit">'+c.votesLeft+'/'+c.maxVote+'</b> · 투표하면 '+(c.votesLeft-1)+'표 남아요. 취소할 수 없어요.</p><div class="row"><button class="vbtn gray" id="vno" style="margin:0">취소</button><button class="vbtn" id="vyes" style="margin:0">♥ 투표하기</button></div></div>';
+  else act = '<button class="vbtn" id="va">♥ 투표하기 <span style="opacity:.8;font-weight:600">(오늘 '+c.votesLeft+'표 남음)</span></button>';
+  sheetIn.innerHTML = '<div class="view"><img src="'+esc(p.img)+'" alt="'+esc(p.title)+'"><h2>'+esc(p.title)+'</h2>'+
+    '<p class="desc">'+esc(p.nick)+(p.team && p.team!=='기타' ? ' · '+esc(p.team) : '')+' · ♥ '+p.votes+'표</p>'+act+
+    '<p style="text-align:center;margin:12px 0 0"><a href="#" id="cl" style="color:var(--sub);font-size:13px">닫기</a></p></div>';
+  sheetEl.className = 'sheet on';
+  document.getElementById('cl').onclick = function(e){ e.preventDefault(); closeSheet(); };
+  var va = document.getElementById('va'); if(va) va.onclick = function(){ if(!L.me){ closeSheet(); return openAuth(); } openView(pid, true); };
+  var vn = document.getElementById('vno'); if(vn) vn.onclick = function(){ openView(pid); };
+  var vy = document.getElementById('vyes'); if(vy) vy.onclick = function(){ vy.disabled = true; vy.textContent = '투표 중…'; doVote(pid); };
+}
+function doVote(pid){
   call('vote', [tok(), pid], function(r){
-    if(r.error === 'login'){ setTok(null); return start(); }
-    if(r.error){ toast(r.error); b.disabled = false; return; }
-    toast('투표했어요! 오늘 '+r.votesLeft+'표 남았어요.');
+    if(r.error === 'login'){ setTok(null); closeSheet(); return start(); }
+    if(r.error){ closeSheet(); toast(r.error); return start(); }
+    closeSheet();
+    var b = document.createElement('div'); b.className = 'boom';
+    b.innerHTML = '<div><i>💖</i><b>투표 완료!</b><span>이 사진 '+r.votes+'표 · 오늘 '+r.votesLeft+'표 남았어요</span></div>';
+    document.body.appendChild(b); setTimeout(function(){ b.remove(); }, 1600);
     start();
-  });
+  }, function(){ closeSheet(); toast('연결이 끊겼어요. 투표가 반영됐는지 화면에서 확인해 주세요.'); start(); });
 }
 
 /* ---------- 로그인 / 참가 ---------- */
