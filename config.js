@@ -4,7 +4,7 @@
  */
 window.QR_SERVERS = {
   pilot: { name: 'S8동 시범운영', url: 'https://script.google.com/macros/s/AKfycbxg6erW2PqRI4ypkY9MXjvJ3IO1EdC_V4H1QQiyj-3ezjkTvNXHJxsigDJxlNmUuD6u/exec' },
-  fest:  { name: '유성국화축제 (시뮬레이션)', url: https://script.google.com/macros/s/AKfycbzhSpY7T8yz-EXSjXihWN0nqeTjhttKerSYSIJI9b_aE4nCJhTNaws7YPXXBg4CeIejQQ/exec }
+  fest:  { name: '유성국화축제 (시뮬레이션)', url: '여기에_축제서버_주소' }
 };
 /* 포털·자랑대회·공개현황이 기본으로 쓰는 서버 */
 window.QR_DEFAULT = 'fest';
