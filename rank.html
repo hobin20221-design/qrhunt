@@ -49,10 +49,10 @@ tr.p1 td.rk,tr.p2 td.rk,tr.p3 td.rk{font-family:"Black Han Sans","Noto Sans KR",
 <body>
 <main class="wrap">
   <div class="eyebrow">2026 학생 리빙랩 · 도시공학과 복도</div>
-  <h1>QR 보물찾기<br>실시간 순위</h1>
+  <h1><span id="ttl">QR 보물찾기</span><br>실시간 순위</h1>
   <div id="app"><p class="empty">순위를 불러오는 중이에요</p></div>
   <div class="foot">
-    <span id="stamp">같은 개수면 먼저 달성한 사람이 위예요 · 1분마다 자동 갱신</span>
+    <span id="stamp">같은 점수면 먼저 달성한 사람이 위예요 · 1분마다 자동 갱신</span>
     <a class="go" href="./">참가하러 가기</a>
   </div>
 </main>
@@ -74,17 +74,18 @@ function roundHtml(r){
 }
 function render(d){
   var h = roundHtml(d.round);
-  h += '<div class="stats"><div class="stat"><b>'+d.players+'명</b><span>보물을 찾은 참가자</span></div><div class="stat"><b>'+d.total+'개</b><span>지금까지 찾은 보물</span></div></div>';
+  if(d.title){ document.getElementById('ttl').textContent = d.title; document.title = d.title + ' 실시간 순위'; }
+  h += '<div class="stats"><div class="stat"><b>'+d.players+'명</b><span>점수를 얻은 참가자</span></div><div class="stat"><b>'+d.total+'점</b><span>지금까지 쌓인 점수</span></div></div>';
   var max = Math.max(1, Math.max.apply(null, d.teams.map(function(t){ return t.score; })));
-  h += '<div class="cols"><section class="card"><h2>학년 대항전</h2><p class="note">학년별로 찾은 개수를 모두 합산</p>'+
-    d.teams.map(function(t,i){ return '<div class="team'+(i===0&&t.score>0?' lead':'')+'"><b>'+esc(t.team)+'</b><div class="track" role="img" aria-label="'+esc(t.team)+' '+t.score+'개"><div class="fill" style="width:'+(t.score/max*100)+'%"></div></div><em>'+t.score+'개<small>'+t.act+'명 참여</small></em></div>'; }).join('')+
+  h += '<div class="cols"><section class="card"><h2>팀 대항전</h2><p class="note">팀별 점수를 모두 합산</p>'+
+    d.teams.map(function(t,i){ return '<div class="team'+(i===0&&t.score>0?' lead':'')+'"><b>'+esc(t.team)+'</b><div class="track" role="img" aria-label="'+esc(t.team)+' '+t.score+'점"><div class="fill" style="width:'+(t.score/max*100)+'%"></div></div><em>'+t.score+'점<small>'+t.act+'명 참여</small></em></div>'; }).join('')+
     '</section>';
-  h += '<section class="card"><h2>개인 순위</h2><p class="note">상위 30명 · 같은 개수면 먼저 달성한 사람이 위</p>';
+  h += '<section class="card"><h2>개인 순위</h2><p class="note">상위 30명 · 같은 점수면 먼저 달성한 사람이 위</p>';
   if(d.people.length){
-    h += '<table><thead><tr><th>순위</th><th>닉네임</th><th>학년</th><th class="n">찾은 개수</th></tr></thead><tbody>'+
-      d.people.map(function(p,i){ return '<tr class="p'+(i+1)+'"><td class="rk">'+(i+1)+'</td><td>'+esc(p.nick)+'</td><td>'+esc(p.team)+'</td><td class="n"><b>'+p.hits+'</b>개</td></tr>'; }).join('')+
+    h += '<table><thead><tr><th>순위</th><th>닉네임</th><th>팀</th><th class="n">점수</th></tr></thead><tbody>'+
+      d.people.map(function(p,i){ return '<tr class="p'+(i+1)+'"><td class="rk">'+(i+1)+'</td><td>'+esc(p.nick)+'</td><td>'+esc(p.team)+'</td><td class="n"><b>'+p.hits+'</b>점</td></tr>'; }).join('')+
       '</tbody></table>';
-  } else h += '<p class="empty">아직 보물을 찾은 사람이 없어요.<br>첫 번째 주인공이 되어보세요.</p>';
+  } else h += '<p class="empty">아직 점수를 얻은 사람이 없어요.<br>첫 번째 주인공이 되어보세요.</p>';
   h += '</section></div>';
   app.innerHTML = h;
   stampEl.textContent = '마지막 갱신 '+String(d.stamp||'').slice(11,16)+' · 1분마다 자동 갱신';

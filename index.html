@@ -51,6 +51,18 @@ h3{font-size:14px;margin:0 0 6px}
 .kakao.mini{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;font-size:14px;font-weight:700}
 .kakao.mini span{display:inline;background:none;color:#191600;padding:0;font-size:14px}
 .load{text-align:center;color:var(--muted);padding:60px 0}
+.quiz,.ans{background:var(--plum-soft)}.stamp,.done{background:var(--leaf-soft)}.info{background:var(--surface);border:1px solid var(--line);text-align:left}
+.info b{font-size:17px}.info p{white-space:pre-line;word-break:break-word}.info a{color:var(--leaf);font-weight:600}
+.opts{display:grid;gap:8px;margin:-4px 0 12px}
+.opts button{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:13px 14px;font:inherit;font-size:15px;text-align:left;color:var(--ink)}
+.opts button:disabled{opacity:.6}
+.opts .ok{border-color:var(--leaf);background:var(--leaf-soft);font-weight:700}
+.opts .ng{border-color:var(--bad);background:#fbe6e3}
+.prog{height:10px;background:var(--paper);border-radius:6px;overflow:hidden;margin:8px 0 10px}
+.prog i{display:block;height:100%;background:var(--leaf)}
+.stops{display:flex;flex-wrap:wrap;gap:6px}
+.stops span{font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--muted);background:var(--surface)}
+.stops span.got{border-color:var(--leaf);color:var(--leaf);font-weight:700;background:var(--leaf-soft)}
 #cam{position:fixed;inset:0;z-index:20;background:#000;display:none;flex-direction:column;overflow:hidden;touch-action:none}
 #cam.on{display:flex}
 #cam video{flex:1;width:100%;min-height:0;object-fit:cover;transform-origin:50% 50%;transition:transform .12s}
@@ -66,7 +78,7 @@ h3{font-size:14px;margin:0 0 6px}
 </style>
 </head>
 <body>
-<header class="bar"><b>QR 보물찾기</b><button type="button" id="home">홈</button></header>
+<header class="bar"><b id="ttl">QR 보물찾기</b><button type="button" id="home">홈</button></header>
 <div class="wrap" id="app"><div class="load">불러오는 중이에요</div></div>
 <div id="cam" aria-modal="true" role="dialog" aria-label="QR 찍기">
   <video id="video" playsinline muted></video>
@@ -133,6 +145,7 @@ function call(fn, args, ok, fail){
 function start(){
   call('getInfo', [], function(i){
     info = i; team = i.teams[0];
+    if(i.title){ document.title = i.title; document.getElementById('ttl').textContent = i.title; }
     var t = getTok();
     if(!t) return renderAuth();
     if(QR) doScan(QR); else refresh();
@@ -151,14 +164,28 @@ function doScan(q, retry){
   call('scan',[getTok(),q],function(r){
     if(r && !r.error){
       /* 첫 시도는 기록됐는데 응답만 못 받은 경우: 재시도하면 '중복'이 나오므로 발견으로 보여줌 */
-      var res = (retry && r.result === '중복') ? '발견' : r.result;
-      last = {result:res, qr:r.qr, cap:r.cap, fresh:true};
+      var res = r.result;
+      if(retry && res === '중복') res = '발견';
+      if(retry && res === '재방문') res = '스탬프';
+      last = {result:res, qr:r.qr, cap:r.cap, quiz:r.quiz, course:r.course, info:r.info, fresh:true};
     }
     handle(r);
   }, function(){
     if(!retry) return setTimeout(function(){ doScan(q, true); }, 1500);
-    last = {note:'결과를 받는 중에 연결이 끊겼어요', sub:'찍은 기록은 서버에 남았을 수 있어요. 아래 내 보물 개수를 확인하고, 안 올랐으면 같은 QR을 다시 찍어 주세요. 두 번 세지는 않아요.', fresh:true};
+    last = {note:'결과를 받는 중에 연결이 끊겼어요', sub:'찍은 기록은 서버에 남았을 수 있어요. 아래 내 점수를 확인하고, 안 올랐으면 같은 QR을 다시 찍어 주세요. 두 번 세지는 않아요.', fresh:true};
     app.innerHTML = '<div class="load">내 기록 불러오는 중이에요</div>';
+    refresh();
+  });
+}
+function doAnswer(q, choice){
+  app.innerHTML = '<div class="load">정답 확인 중이에요</div>';
+  call('answer',[getTok(),q,choice],function(r){
+    if(r && r.error === 'login'){ setTok(null); return renderAuth(); }
+    if(r && r.error){ last = {note:r.error, sub:'아래 점수를 확인해 주세요.', fresh:true}; return refresh(); }
+    last = {result:r.result, qr:r.qr, quiz:r.quiz, fresh:true};
+    renderStatus(r);
+  }, function(){
+    last = {note:'정답을 확인하는 중에 연결이 끊겼어요', sub:'답은 기록됐을 수 있어요. 같은 QR을 다시 찍으면 결과를 볼 수 있어요.', fresh:true};
     refresh();
   });
 }
@@ -170,7 +197,7 @@ function handle(r){
 
 /* ---------- 참가 / 로그인 ---------- */
 function renderAuth(){
-  var head = '<h1>'+(mode==='login'?'로그인':'참가하기')+'</h1><p class="sub">'+info.days+'일 동안 '+hourText(info.open)+'부터 '+hourText(info.close)+'까지, 2시간마다 보물이 바뀌어요</p>';
+  var head = '<h1>'+(mode==='login'?'로그인':'참가하기')+'</h1><p class="sub">'+info.days+'일 동안 '+hourText(info.open)+'부터 '+hourText(info.close)+'까지. '+modsText()+'</p>';
   if(QR) head += '<p class="hint" style="margin:-8px 0 14px">'+esc(QR)+' QR을 찍었어요. '+(mode==='login'?'로그인':'참가')+'하면 바로 확인돼요.</p>';
   if(mode === 'login'){
     app.innerHTML = head + '<div class="card"><label for="n">닉네임</label><input id="n" autocomplete="off">'+
@@ -219,14 +246,66 @@ function periodText(){
   var e = new Date(d); e.setDate(d.getDate() + Math.max(1, info.days) - 1);
   return md(d)+(info.days > 1 ? '~'+md(e) : '')+', '+hourText(info.open)+'~'+hourText(info.close);
 }
+function hasMod(m){ return !info || !info.mods || !info.mods.length || info.mods.indexOf(m) >= 0; }
+function modsText(){
+  var w = [];
+  if(hasMod('보물')) w.push('보물은 '+((info && info.rotate) || 2)+'시간마다 바뀌어요');
+  var x = [];
+  if(info && info.mods){ if(info.mods.indexOf('퀴즈')>=0) x.push('퀴즈'); if(info.mods.indexOf('코스')>=0) x.push('코스 스탬프'); }
+  if(x.length) w.push(x.join('·')+'도 QR로 열려요');
+  return w.join('. ') + (w.length ? '.' : 'QR을 찍어 참여해요.');
+}
+function linkify(t){ return esc(t).replace(/https?:\/\/[^\s<]+/g, function(u){ return '<a href="'+u+'" target="_blank" rel="noopener">'+u+'</a>'; }); }
 var MSG = {
-  '발견':['hit','🌼','보물 발견',function(l,r){return l.qr+' 보물을 찾았어요. 누적 '+r.me.total+'개예요.';}],
+  '발견':['hit','🌼','보물 발견',function(l,r){return l.qr+' 보물을 찾았어요. 누적 '+r.me.total+'점이에요.';}],
   '꽝':['miss','🍂','꽝',function(l,r){return l.qr+'는 이번 회차 보물이 아니에요. '+nextText(r);}],
   '중복':['dup','🌼','보물 맞아요! (이미 찾음)',function(l,r){return l.qr+'는 이번 회차 보물이 맞아요. 이번 회차에 이미 1개로 세서 개수는 그대로예요. '+nextText(r);}],
   '마감':['full','⏱️','한발 늦었어요',function(l){return l.qr+' 보물은 이번 회차 선착순 '+l.cap+'명이 모두 찾아갔어요.';}],
   '시간외':['hour','🌙','운영시간이 아니에요',function(l,r){return '보물은 '+hourText(r.open)+'부터 '+hourText(r.close)+'까지만 찾을 수 있어요.';}],
-  '기간외':['day','📅','시범운영 기간이 아니에요',function(){return '시범운영 기간('+periodText()+')에만 보물을 찾을 수 있어요.';}]
+  '기간외':['day','📅','운영 기간이 아니에요',function(){return '운영 기간('+periodText()+')에만 참여할 수 있어요.';}]
 };
+/* 퀴즈·코스·안내 결과 카드 */
+function moduleCard(l, r){
+  var f = l.fresh ? ' fresh' : '', h = '';
+  if(l.result === '퀴즈' && l.quiz){
+    h += '<div class="result quiz'+f+'"><span class="f">❓</span><b>'+esc(l.qr)+' 퀴즈</b><p>'+esc(l.quiz.q)+'</p></div>';
+    h += '<div class="opts" id="opts">'+l.quiz.opts.map(function(o,i){ return '<button type="button" data-a="'+(i+1)+'">'+(i+1)+'. '+esc(o)+'</button>'; }).join('')+'</div>';
+    h += '<p class="hint" style="margin:-4px 0 12px">한 번만 답할 수 있어요'+(l.quiz.pt ? '. 맞히면 '+l.quiz.pt+'점' : '')+'.</p>';
+    return h;
+  }
+  if((l.result === '정답' || l.result === '오답' || l.result === '풀이완료') && l.quiz){
+    var z = l.quiz, ok = z.mine === '정답';
+    var head = l.result === '풀이완료' ? ['ans','📝','이미 푼 퀴즈', '이 문제는 '+(ok?'맞혔어요':'틀렸어요')+'. 한 문제에 한 번만 답할 수 있어요.']
+      : ok ? ['hit','🎉','정답!', '+'+(z.pt||1)+'점. 누적 '+r.me.total+'점이에요.'] : ['miss','🙈','아쉬워요, 오답', '정답은 '+z.answer+'번이에요.'];
+    h += '<div class="result '+head[0]+f+'"><span class="f">'+head[1]+'</span><b>'+head[2]+'</b><p>'+esc(head[3])+'</p></div>';
+    h += '<div class="card"><h3>'+esc(z.q)+'</h3><div class="opts" style="margin:8px 0 0">'+z.opts.map(function(o,i){
+      var c = (i+1) === z.answer ? 'ok' : ((i+1) === z.choice && !ok ? 'ng' : '');
+      return '<button type="button" disabled class="'+c+'">'+(i+1)+'. '+esc(o)+((i+1) === z.answer ? ' ✓' : '')+'</button>'; }).join('')+'</div>'+
+      (z.note ? '<p class="hint" style="margin-top:10px">'+esc(z.note)+'</p>' : '')+'</div>';
+    return h;
+  }
+  if((l.result === '스탬프' || l.result === '재방문' || l.result === '완주') && l.course){
+    var c = l.course, done = l.result === '완주';
+    var t = done ? ['done','🏁','코스 완주!', c.name+' 코스를 모두 돌았어요'+(c.pt ? '. 보너스 +'+c.pt+'점' : '')+'.']
+      : l.result === '재방문' ? ['note','📍','이미 찍은 스탬프', l.qr+'는 이미 찍었어요. '+c.name+' '+c.got+'/'+c.total]
+      : ['stamp','📍','스탬프 획득', c.name+' '+c.got+'/'+c.total+(c.total-c.got ? ', '+(c.total-c.got)+'곳 남았어요' : '')];
+    h += '<div class="result '+t[0]+f+'"><span class="f">'+t[1]+'</span><b>'+t[2]+'</b><p>'+esc(t[3])+'</p>'+(done && c.msg ? '<p style="margin-top:8px;font-weight:700">'+esc(c.msg)+'</p>' : '')+'</div>';
+    return h;
+  }
+  if(l.result === '안내' && l.info){
+    h += '<div class="result info'+f+'"><b>ℹ️ '+esc(l.info.title)+'</b><p>'+linkify(l.info.text || '')+'</p></div>';
+    return h;
+  }
+  return '';
+}
+function courseCards(r){
+  if(!r.courses || !r.courses.length) return '';
+  return r.courses.map(function(c){
+    return '<div class="card"><h3>'+esc(c.name)+' 코스 '+(c.done ? '· 완주 🏁' : c.got+'/'+c.total)+'</h3>'+(c.desc ? '<p class="hint">'+esc(c.desc)+'</p>' : '')+
+      '<div class="prog"><i style="width:'+(c.total ? c.got/c.total*100 : 0)+'%"></i></div>'+
+      '<div class="stops">'+c.list.map(function(s){ return '<span class="'+(s.got?'got':'')+'">'+(s.got?'✓ ':'')+esc(s.loc && s.loc !== '미정' ? s.loc : s.id)+'</span>'; }).join('')+'</div></div>';
+  }).join('');
+}
 function roundLine(r){
   var x = r.round;
   if(!x) return r.day+'일차 / '+r.days+'일';
@@ -238,6 +317,8 @@ function renderStatus(r){
   h += '<div class="top"><div><b>'+esc(m.nick)+'</b><span class="chip">'+esc(m.team)+'</span></div><span class="hint">'+esc(roundLine(r))+'</span></div>';
   if(last && last.note){
     h += '<div class="result note '+(last.fresh?'fresh':'')+'"><b style="font-size:16px;color:var(--bad)">'+esc(last.note)+'</b><p>'+esc(last.sub || '건물에 붙은 QR을 다시 찍어 주세요.')+'</p></div>';
+  } else if(last && moduleCard(last, r)){
+    h += moduleCard(last, r);
   } else if(last && MSG[last.result]){
     var x = MSG[last.result];
     h += '<div class="result '+x[0]+' '+(last.fresh?'fresh':'')+'"><span class="f">'+x[1]+'</span><b>'+x[2]+'</b><p>'+esc(x[3](last,r))+'</p></div>';
@@ -245,17 +326,24 @@ function renderStatus(r){
   if(last) last.fresh = false;
   h += '<button class="btn scan" id="scanbtn" type="button"><span aria-hidden="true">📷</span> QR 찍기</button>';
   h += kakaoBox(kakaoSeen());
-  h += '<div class="score"><div><b>'+m.total+'</b><span>내 보물, 누적</span></div><div><b>'+m.today+'</b><span>오늘 찾은 보물</span></div></div>';
+  h += '<div class="score"><div><b>'+m.total+'</b><span>내 점수, 누적</span></div><div><b>'+m.today+'</b><span>오늘 얻은 점수</span></div></div>';
+  h += courseCards(r);
   var my = r.teams.map(function(t){return t.team;}).indexOf(m.team)+1;
-  h += '<div class="card"><h3>학년 대항전'+(my?', 우리 '+my+'위':'')+'</h3>'+
-    r.teams.map(function(t,i){return '<div class="r'+(t.team===m.team?' mine':'')+'"><span>'+(i+1)+'. '+esc(t.team)+'</span><span>합계 '+t.score+'개</span></div>';}).join('')+'</div>';
+  h += '<div class="card"><h3>팀 대항전'+(my?', 우리 '+my+'위':'')+'</h3>'+
+    r.teams.map(function(t,i){return '<div class="r'+(t.team===m.team?' mine':'')+'"><span>'+(i+1)+'. '+esc(t.team)+'</span><span>합계 '+t.score+'점</span></div>';}).join('')+'</div>';
   h += '<div class="card"><h3>개인 순위'+(m.rank?', 나는 '+m.rank+'위':'')+'</h3>'+
-    (r.top.length? r.top.map(function(p,i){return '<div class="r'+(p.mine?' mine':'')+'"><span>'+(i+1)+'. '+esc(p.nick)+'</span><span>'+p.hits+'개</span></div>';}).join('') : '<p class="hint">첫 보물의 주인공이 되어보세요.</p>')+'</div>';
+    (r.top.length? r.top.map(function(p,i){return '<div class="r'+(p.mine?' mine':'')+'"><span>'+(i+1)+'. '+esc(p.nick)+'</span><span>'+p.hits+'점</span></div>';}).join('') : '<p class="hint">첫 점수의 주인공이 되어보세요.</p>')+'</div>';
   h += '<a class="btn" href="rank.html" style="display:block;text-align:center;text-decoration:none;background:var(--surface);color:var(--ink);border:1px solid var(--line)">전체 순위 보기</a>';
-  h += '<p class="hint" style="text-align:center;margin-top:12px">보물은 2시간마다 새로 바뀌어요. 같은 QR도 다음 회차에 다시 깨어날 수 있어요.</p>';
+  h += '<p class="hint" style="text-align:center;margin-top:12px">'+(hasMod('보물') ? '보물은 '+((info && info.rotate) || 2)+'시간마다 새로 바뀌어요. 같은 QR도 다음 회차에 다시 깨어날 수 있어요.' : '거점마다 QR을 찍으면 퀴즈와 스탬프가 열려요.')+'</p>';
   h += '<button class="link" id="out">로그아웃</button>';
   app.innerHTML = h;
   document.getElementById('scanbtn').onclick = openCam;
+  var ob = document.getElementById('opts');
+  if(ob) ob.onclick = function(e){
+    var b = e.target.closest ? e.target.closest('[data-a]') : null; if(!b) return;
+    [].forEach.call(ob.children, function(x){ x.disabled = true; });
+    doAnswer(last.qr, +b.getAttribute('data-a'));
+  };
   document.getElementById('out').onclick = function(){ setTok(null); last=null; mode='login'; renderAuth(); };
 }
 
@@ -326,7 +414,7 @@ function found(text){
   var q = '';
   try{ q = new URL(text).searchParams.get('qr'); }catch(e){ q = text; }
   q = cleanQr(q);
-  if(!q){ cammsg.textContent = '보물찾기 QR이 아니에요. 건물에 붙은 QR을 찍어 주세요.'; return false; }
+  if(!q){ cammsg.textContent = '참여용 QR이 아니에요. 거점에 붙은 QR을 찍어 주세요.'; return false; }
   closeCam(); doScan(q); return true;
 }
 function tick(){
