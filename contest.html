@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>자랑대회</title>
+<style>
+:root{--bg:#F3F5F9;--card:#FFF;--ink:#1E2329;--sub:#6B7480;--muted:#9AA3AF;--line:#E7EAF0;--blue:#3D8BFD;--blue-soft:#EAF2FF;--pink:#F0679A;--pink-soft:#FDEBF2;--bad:#E5534B;--mint:#34C38F;--yellow-soft:#FFF6E0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.5}
+.bar{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;background:var(--card);padding:calc(10px + env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--line)}
+.bar a{color:var(--sub);text-decoration:none;font-size:14px}
+.bar b{font-size:16px}
+.me{font-size:13px;color:var(--sub)}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px calc(48px + env(safe-area-inset-bottom))}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px}
+.tabs button{flex:none;border:0;background:#E9EDF3;color:#4B5563;border-radius:999px;padding:8px 16px;font:inherit;font-size:14px;font-weight:700}
+.tabs button.on{background:var(--ink);color:#fff}
+.card{background:var(--card);border-radius:18px;padding:18px;margin-bottom:12px}
+h1{font-size:22px;margin:0 0 4px}
+.desc{color:var(--sub);font-size:14px;margin:0}
+.auth{font-size:13px;background:var(--blue-soft);color:#2F5FB3;border-radius:12px;padding:8px 12px;margin-top:10px}
+.auth.no{background:var(--yellow-soft);color:#8A5A00}
+.acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.btn{border:0;border-radius:12px;padding:11px 16px;font:inherit;font-weight:700;background:var(--pink);color:#fff;cursor:pointer}
+.btn.ghost{background:#EEF1F5;color:var(--ink)}
+.btn:disabled{opacity:.45}
+.sort{margin-left:auto;display:flex;gap:4px}
+.sort button{border:0;background:none;font:inherit;font-size:13px;color:var(--muted);padding:4px 6px}
+.sort button.on{color:var(--ink);font-weight:700}
+.left{font-size:13px;color:var(--sub)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.ph{background:var(--card);border-radius:16px;overflow:hidden}
+.ph .img{aspect-ratio:1;background:#E9EDF3 center/cover no-repeat}
+.ph .t{padding:9px 10px 10px}
+.ph b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph small{display:block;color:var(--muted);font-size:12px}
+.ph .v{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.ph .v button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 11px;font:inherit;font-size:13px;font-weight:700;color:var(--pink)}
+.ph .v button.on{background:var(--pink);border-color:var(--pink);color:#fff}
+.ph .v button:disabled{color:var(--muted)}
+.ph .v button.on:disabled{color:#fff;opacity:1}
+.rank{position:absolute;margin:8px;background:rgba(30,35,41,.85);color:#fff;font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px}
+.empty{text-align:center;color:var(--muted);padding:36px 0}
+.mine .r{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.mine .r:last-child{border-bottom:0}
+.st{font-size:12px;font-weight:700;border-radius:999px;padding:1px 9px}
+.st.대기{background:#EEF1F5;color:var(--sub)}.st.공개{background:#E6F7F0;color:#1E8A5F}.st.반려{background:#FDECEB;color:var(--bad)}
+/* 시트(모달) */
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(15,20,25,.45);display:none;align-items:flex-end;justify-content:center}
+.sheet.on{display:flex}
+.sheet .in{background:var(--card);width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
+@media(min-width:600px){.sheet{align-items:center}.sheet .in{border-radius:22px}}
+label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}
+input[type=text],input[type=tel]{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px 12px;background:#F7F8FA;font:inherit;font-size:16px}
+.pick{display:block;border:2px dashed #CBD3DE;border-radius:14px;padding:18px;text-align:center;color:var(--sub);cursor:pointer}
+.pick img{max-width:100%;max-height:300px;border-radius:10px;display:block;margin:0 auto}
+.consent{display:flex;gap:8px;font-size:12.5px;color:var(--sub);font-weight:400;align-items:flex-start}
+.consent input{margin-top:3px}
+.err{color:var(--bad);font-size:13px;min-height:1em;margin:8px 0}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:#F7F8FA;border-radius:10px;padding:7px 11px;font:inherit;font-size:13.5px}
+.seg button.on{border-color:var(--ink);background:var(--card);font-weight:700}
+.load{text-align:center;color:var(--muted);padding:50px 0}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:999px;padding:10px 18px;font-size:14px;z-index:30;display:none}
+</style>
+</head>
+<body>
+<header class="bar"><a href="portal.html" id="back">← 포털</a><b>자랑대회</b><span class="me" id="me"></span></header>
+<div class="wrap" id="app"><div class="load">불러오는 중이에요</div></div>
+<div class="sheet" id="sheet"><div class="in" id="sheetin"></div></div>
+<div class="toast" id="toast"></div>
+<script src="config.js"></script>
+<script>
+var S = window.QR_SERVERS || {}, SRV = (new URLSearchParams(location.search).get('s') || window.QR_DEFAULT || 'fest').replace(/[^a-z]/g,'');
+if(!S[SRV]) SRV = 'pilot';
+var API = S[SRV].url, SQ = SRV==='pilot' ? '' : '?s='+SRV, KEY = SRV==='pilot' ? 'qrhunt-token' : 'qrhunt-token-'+SRV;
+var app = document.getElementById('app'), sheetEl = document.getElementById('sheet'), sheetIn = document.getElementById('sheetin');
+var L = null, cur = (new URLSearchParams(location.search).get('c') || ''), sort = 'top', G = null, info = null, mode = 'join', team = null, shot = null;
+document.getElementById('back').href = 'portal.html' + (SRV==='pilot' ? '?s=pilot' : SQ);
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function tok(){ try{ return localStorage.getItem(KEY); }catch(e){ return window._t || null; } }
+function setTok(t){ try{ if(t) localStorage.setItem(KEY,t); else localStorage.removeItem(KEY); }catch(e){} window._t = t; }
+function toast(m){ var t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(t._h); t._h = setTimeout(function(){ t.style.display = 'none'; }, 2600); }
+function call(fn, args, ok, fail){
+  fetch(API + '?api=' + fn + '&a=' + encodeURIComponent(JSON.stringify(args)) + '&_=' + Date.now(), { redirect:'follow' })
+    .then(function(r){ return r.json(); }).then(ok).catch(fail || function(){ toast('연결이 잠깐 끊겼어요. 다시 시도해 주세요.'); });
+}
+function post(fn, args, ok, fail){
+  /* text/plain 본문이라 미리 확인 요청(preflight) 없이 Apps Script로 바로 감 */
+  fetch(API, { method:'POST', body: JSON.stringify({ api: fn, a: args }), redirect:'follow' })
+    .then(function(r){ return r.json(); }).then(ok).catch(fail);
+}
+
+function start(){
+  if(String(API).indexOf('여기에') >= 0){ app.innerHTML = '<div class="card">config.js에 '+esc(S[SRV].name)+' 서버 주소가 아직 없어요.</div>'; return; }
+  call('contests', [tok()], function(r){
+    L = r;
+    if(!r.me && tok()) setTok(null);
+    document.getElementById('me').innerHTML = r.me ? esc(r.me.nick) + ' · <a href="#" id="out" style="font-size:13px">로그아웃</a>' : '<a href="#" id="login" style="font-size:13px;color:var(--blue);font-weight:700">로그인</a>';
+    var o = document.getElementById('out'), li = document.getElementById('login');
+    if(o) o.onclick = function(e){ e.preventDefault(); setTok(null); start(); };
+    if(li) li.onclick = function(e){ e.preventDefault(); openAuth(); };
+    if(!r.list.length){ app.innerHTML = '<div class="empty">진행 중인 대회가 없어요.</div>'; return; }
+    if(!r.list.some(function(c){ return c.id === cur; })) cur = r.list[0].id;
+    loadGallery();
+  });
+}
+function loadGallery(){
+  call('gallery', [cur, tok(), sort], function(g){ G = g; render(); });
+}
+function C(){ return L.list.filter(function(c){ return c.id === cur; })[0]; }
+function render(){
+  var c = C(), h = '';
+  h += '<div class="tabs">'+L.list.map(function(x){ return '<button data-c="'+esc(x.id)+'" class="'+(x.id===cur?'on':'')+'">'+esc(x.name)+' <span style="opacity:.6">'+x.count+'</span></button>'; }).join('')+'</div>';
+  h += '<div class="card"><h1>'+esc(c.name)+(c.state!=='진행'?' <span class="st 대기">'+esc(c.state)+'</span>':'')+'</h1><p class="desc">'+esc(c.desc)+'</p>';
+  if(c.authNames.length) h += '<div class="auth'+(L.me && !c.canUpload ? ' no' : '')+'">📍 '+esc(c.authNames.join(', '))+' 중 한 곳의 QR을 찍은 사람만 올릴 수 있어요'+(L.me ? (c.canUpload ? ' · 인증 완료 ✓' : ' · 아직 인증 전이에요') : '')+'</div>';
+  h += '<div class="acts"><button class="btn" id="up"'+(c.state!=='진행'?' disabled':'')+'>📸 사진 올리기</button>'+
+    (L.me ? '<span class="left">오늘 남은 투표 <b>'+c.votesLeft+'</b>/'+c.maxVote+' · 올린 사진 '+c.myUploads+'/'+c.maxUp+'</span>' : '<span class="left">투표는 1인 하루 '+c.maxVote+'표</span>')+
+    '<span class="sort"><button data-o="top" class="'+(sort==='top'?'on':'')+'">인기순</button><button data-o="new" class="'+(sort==='new'?'on':'')+'">최신순</button></span></div></div>';
+  if(G.photos.length){
+    h += '<div class="grid">'+G.photos.map(function(p,i){
+      var dis = !L.me || p.own || p.voted || !c.votesLeft || c.state!=='진행';
+      return '<div class="ph"><div style="position:relative">'+(sort==='top' && i<3 && p.votes ? '<span class="rank">'+(i+1)+'위</span>' : '')+'<div class="img" style="background-image:url(\''+esc(p.img)+'\')" role="img" aria-label="'+esc(p.title)+'"></div></div>'+
+        '<div class="t"><b>'+esc(p.title)+'</b><small>'+esc(p.nick)+(p.team && p.team!=='기타' ? ' · '+esc(p.team) : '')+'</small>'+
+        '<div class="v"><small>'+(p.own?'내 사진':'')+'</small><button data-v="'+esc(p.id)+'" class="'+(p.voted?'on':'')+'"'+(dis && !(!L.me) ? ' disabled' : '')+'>♥ '+p.votes+'</button></div></div></div>';
+    }).join('')+'</div>';
+  } else h += '<div class="empty">아직 공개된 사진이 없어요.<br>첫 번째로 자랑해 보세요!</div>';
+  if(L.me) h += '<div class="card mine" id="mine" style="margin-top:12px"><b>내가 올린 사진</b><div id="minelist" class="left" style="margin-top:6px">불러오는 중…</div></div>';
+  app.innerHTML = h;
+  [].forEach.call(app.querySelectorAll('[data-c]'), function(b){ b.onclick = function(){ cur = b.getAttribute('data-c'); app.innerHTML = '<div class="load">불러오는 중이에요</div>'; loadGallery(); }; });
+  [].forEach.call(app.querySelectorAll('[data-o]'), function(b){ b.onclick = function(){ sort = b.getAttribute('data-o'); loadGallery(); }; });
+  [].forEach.call(app.querySelectorAll('[data-v]'), function(b){ b.onclick = function(){ if(!L.me) return openAuth(); doVote(b.getAttribute('data-v'), b); }; });
+  document.getElementById('up').onclick = function(){ if(!L.me) return openAuth(true); if(!c.canUpload) return toast('먼저 인증 QR을 찍어 주세요.'); openUpload(); };
+  if(L.me) call('myPhotos', [tok()], function(r){
+    var el = document.getElementById('minelist'); if(!el) return;
+    var names = {}; L.list.forEach(function(x){ names[x.id] = x.name; });
+    el.innerHTML = (r.photos||[]).length ? r.photos.map(function(p){ return '<div class="r"><span>'+esc(p.title)+' <small class="left">'+esc(names[p.cid]||p.cid)+'</small>'+(p.memo?'<br><small style="color:var(--bad)">'+esc(p.memo)+'</small>':'')+'</span><span><span class="st '+esc(p.st)+'">'+esc(p.st)+'</span>'+(p.st==='공개'?' ♥'+p.votes:'')+'</span></div>'; }).join('') : '아직 올린 사진이 없어요. 운영자가 확인한 뒤 공개돼요.';
+  });
+}
+function doVote(pid, b){
+  b.disabled = true;
+  call('vote', [tok(), pid], function(r){
+    if(r.error === 'login'){ setTok(null); return start(); }
+    if(r.error){ toast(r.error); b.disabled = false; return; }
+    toast('투표했어요! 오늘 '+r.votesLeft+'표 남았어요.');
+    start();
+  });
+}
+
+/* ---------- 로그인 / 참가 ---------- */
+function openAuth(forUpload){
+  if(!info){ call('getInfo', [], function(i){ info = i; team = i.teams[0]; openAuth(forUpload); }); return; }
+  var h = '<h1 style="font-size:19px">'+(mode==='login'?'로그인':'참가하기')+'</h1><p class="desc">QR 참여에서 쓰는 닉네임과 번호 4자리 그대로예요.</p>';
+  h += '<label>닉네임</label><input type="text" id="n" maxlength="12" autocomplete="off">';
+  if(mode==='join') h += '<label>소속</label><div class="seg" id="seg">'+info.teams.map(function(t){ return '<button type="button" data-t="'+esc(t)+'" class="'+(t===team?'on':'')+'">'+esc(t)+'</button>'; }).join('')+'</div>';
+  h += '<label>내 번호 4자리</label><input type="tel" id="p" inputmode="numeric" maxlength="4" autocomplete="off">';
+  h += '<p class="err" id="err"></p><button class="btn" id="go" style="width:100%">'+(mode==='login'?'로그인':'참가하기')+'</button>'+
+    '<p style="text-align:center;margin:12px 0 0"><a href="#" id="sw" style="color:var(--sub);font-size:13px">'+(mode==='login'?'처음이면 참가하기':'이미 참가했으면 로그인')+'</a> · <a href="#" id="cl" style="color:var(--sub);font-size:13px">닫기</a></p>';
+  sheetIn.innerHTML = h; sheetEl.className = 'sheet on';
+  var seg = document.getElementById('seg');
+  if(seg) seg.onclick = function(e){ var t = e.target.getAttribute('data-t'); if(!t) return; team = t; [].forEach.call(seg.children, function(x){ x.className = x.getAttribute('data-t')===t?'on':''; }); };
+  document.getElementById('sw').onclick = function(e){ e.preventDefault(); mode = mode==='login'?'join':'login'; openAuth(forUpload); };
+  document.getElementById('cl').onclick = function(e){ e.preventDefault(); closeSheet(); };
+  document.getElementById('go').onclick = function(){
+    var b = this, n = document.getElementById('n').value.trim(), p = document.getElementById('p').value.trim(); b.disabled = true;
+    var done = function(r){ if(r.error){ b.disabled = false; document.getElementById('err').textContent = r.error; return; } setTok(r.token); closeSheet(); toast('반가워요, '+n+'님!'); start(); };
+    if(mode==='login') call('resume', [n, p], done); else call('register', [n, team, p], done);
+  };
+}
+function closeSheet(){ sheetEl.className = 'sheet'; sheetIn.innerHTML = ''; shot = null; }
+sheetEl.onclick = function(e){ if(e.target === sheetEl) closeSheet(); };
+
+/* ---------- 사진 올리기: 폰 사진을 1280px 이하 JPEG로 줄여서 보냄 ---------- */
+function openUpload(){
+  var c = C();
+  sheetIn.innerHTML = '<h1 style="font-size:19px">'+esc(c.name)+'에 올리기</h1>'+
+    '<label class="pick" id="pick">사진을 고르거나 찍어 주세요<input type="file" id="file" accept="image/*" hidden></label>'+
+    '<label>제목</label><input type="text" id="title" maxlength="30" placeholder="예: 세상에서 제일 밤티인 국화">'+
+    '<label class="consent"><input type="checkbox" id="ok"><span>다른 사람 얼굴이 크게 나오지 않았고, 운영자가 확인한 뒤 공개되는 것에 동의해요. 사진은 대회가 끝나면 지워요.</span></label>'+
+    '<p class="err" id="err"></p><button class="btn" id="send" style="width:100%">올리기</button>'+
+    '<p style="text-align:center;margin:12px 0 0"><a href="#" id="cl" style="color:var(--sub);font-size:13px">닫기</a></p>';
+  sheetEl.className = 'sheet on';
+  document.getElementById('cl').onclick = function(e){ e.preventDefault(); closeSheet(); };
+  document.getElementById('file').onchange = function(){
+    var f = this.files && this.files[0]; if(!f) return;
+    var img = new Image(), url = URL.createObjectURL(f);
+    img.onload = function(){
+      var k = Math.min(1, 1280 / Math.max(img.width, img.height)), cv = document.createElement('canvas');
+      cv.width = Math.round(img.width*k); cv.height = Math.round(img.height*k);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      shot = cv.toDataURL('image/jpeg', 0.82); URL.revokeObjectURL(url);
+      document.getElementById('pick').innerHTML = '<img src="'+shot+'" alt="고른 사진">';
+    };
+    img.onerror = function(){ document.getElementById('err').textContent = '이 사진은 열 수 없어요. 다른 사진을 골라 주세요.'; };
+    img.src = url;
+  };
+  document.getElementById('send').onclick = function(){
+    var err = document.getElementById('err'), t = document.getElementById('title').value.trim(), b = this;
+    if(!shot) return err.textContent = '사진을 골라 주세요.';
+    if(!t) return err.textContent = '제목을 적어 주세요.';
+    if(!document.getElementById('ok').checked) return err.textContent = '안내에 동의해야 올릴 수 있어요.';
+    b.disabled = true; b.textContent = '올리는 중…';
+    post('upload', [tok(), cur, t, shot], function(r){
+      if(r.error){ b.disabled = false; b.textContent = '올리기'; err.textContent = r.error === 'login' ? '다시 로그인해 주세요.' : r.error; return; }
+      closeSheet(); toast('올렸어요! 운영자 확인 후 공개돼요.'); start();
+    }, function(){ b.disabled = false; b.textContent = '올리기'; err.textContent = '연결이 끊겼어요. 다시 눌러 주세요.'; });
+  };
+}
+start();
+</script>
+</body>
+</html>

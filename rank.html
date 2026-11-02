@@ -53,13 +53,14 @@ tr.p1 td.rk,tr.p2 td.rk,tr.p3 td.rk{font-family:"Black Han Sans","Noto Sans KR",
   <div id="app"><p class="empty">순위를 불러오는 중이에요</p></div>
   <div class="foot">
     <span id="stamp">같은 점수면 먼저 달성한 사람이 위예요 · 1분마다 자동 갱신</span>
-    <a class="go" href="./">참가하러 가기</a>
+    <a class="go" id="golink" href="./">참가하러 가기</a>
   </div>
 </main>
+<script src="config.js"></script>
 <script>
-/* ===== Apps Script 배포 주소 (index.html과 같은 주소) ===== */
-var API_URL = 'https://script.google.com/macros/s/AKfycbxg6erW2PqRI4ypkY9MXjvJ3IO1EdC_V4H1QQiyj-3ezjkTvNXHJxsigDJxlNmUuD6u/exec';
-/* ========================================================== */
+var SRV = (new URLSearchParams(location.search).get('s') || 'pilot').replace(/[^a-z]/g,'');
+if(!(window.QR_SERVERS||{})[SRV]) SRV = 'pilot';
+var API_URL = window.QR_SERVERS[SRV].url, SQ = SRV === 'pilot' ? '' : '?s=' + SRV;
 var app = document.getElementById('app'), stampEl = document.getElementById('stamp'), last = null;
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function minsLeft(next){
@@ -101,6 +102,8 @@ function load(){
       if(!last) app.innerHTML = '<p class="empty err">순위를 불러오지 못했어요. 잠시 뒤 새로고침해 주세요.</p>';
     });
 }
+document.getElementById('golink').href = './' + SQ;
+document.querySelector('.eyebrow').textContent = '2026 학생 리빙랩 · ' + window.QR_SERVERS[SRV].name;
 load();
 setInterval(function(){ if(!document.hidden) load(); }, 60000);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
