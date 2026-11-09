@@ -8,7 +8,7 @@
 :root{--bg:#F3F5F9;--card:#FFF;--ink:#1E2329;--sub:#6B7480;--muted:#9AA3AF;--line:#E7EAF0;--blue:#3D8BFD;--mint:#34C38F;--yellow:#F5B83D;--purple:#9B7BEA}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:14.5px;line-height:1.5}
-.wrap{max-width:1100px;margin:0 auto;padding:calc(16px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom))}
+.wrap{max-width:1400px;margin:0 auto;padding:calc(16px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom))}
 .top{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:14px}
 .top a{color:var(--sub);text-decoration:none;font-size:13.5px}
 h1{font-size:22px;margin:4px 0 0}
@@ -24,8 +24,15 @@ h2{font-size:16px;margin:0 0 10px}
 .stat b{display:block;font-size:26px;font-weight:800;color:#3A4250}
 .stat span{font-size:12.5px;color:var(--sub)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
-.map{border-radius:14px;overflow:hidden;background:#FAFBFD;border:1px solid var(--line)}
+.map{border-radius:14px;overflow:auto;background:#FAFBFD;border:1px solid var(--line);-webkit-overflow-scrolling:touch;max-height:78vh}
+.map .mz{min-width:100%}
 .map svg{display:block;width:100%;height:auto}
+.zoom{display:flex;gap:4px;align-items:center}
+.zoom button{border:1px solid var(--line);background:var(--card);border-radius:10px;min-width:34px;height:32px;font:inherit;font-size:15px;font-weight:700;color:var(--ink);cursor:pointer;padding:0 10px}
+.zoom span{font-size:12.5px;color:var(--sub);min-width:40px;text-align:center;font-variant-numeric:tabular-nums}
+.mapcard.full{position:fixed;inset:0;z-index:50;margin:0;border-radius:0;display:flex;flex-direction:column;padding:12px}
+.mapcard.full .map{flex:1;max-height:none}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--sub);margin-top:8px;align-items:center}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
 .qtag{display:inline-block;background:var(--ink);color:#fff;font-size:10.5px;border-radius:999px;padding:0 6px;margin-right:3px}
@@ -45,19 +52,20 @@ h2{font-size:16px;margin:0 0 10px}
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><div><a href="portal.html" id="back">← 포털</a><h1 id="ttl">공개 현황</h1></div><div class="seg" id="srvs"></div></div>
+  <div class="top"><div><a href="home.html" id="back">← 처음 화면</a><h1 id="ttl">공개 현황</h1></div></div>
   <div id="app"><div class="load">집계를 불러오는 중이에요</div></div>
 </div>
 <script src="config.js"></script>
+<script>if(!new URLSearchParams(location.search).get('s')) history.replaceState(null,'',location.pathname+'?s='+(window.QR_DEFAULT||'fest'));</script>
+<script src="mode.js"></script>
 <script>
 var S = window.QR_SERVERS || {}, SRV = (new URLSearchParams(location.search).get('s') || window.QR_DEFAULT || 'fest').replace(/[^a-z]/g,'');
 if(!S[SRV]) SRV = 'pilot';
 var app = document.getElementById('app'), D = null, f = { date:'', metric:'scans' }, plan = { src:'', w:100, h:56 };
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function heat(k){ var a=[169,203,255], b=[31,107,235]; return 'rgb('+a.map(function(v,i){ return Math.round(v+(b[i]-v)*k); }).join(',')+')'; }
-document.getElementById('srvs').innerHTML = Object.keys(S).map(function(k){ return '<button data-s="'+k+'" class="'+(k===SRV?'on':'')+'">'+esc(S[k].name)+'</button>'; }).join('');
-document.getElementById('srvs').onclick = function(e){ var k = e.target.getAttribute('data-s'); if(k && k!==SRV) location.search = '?s='+k; };
-document.getElementById('back').href = 'portal.html' + (SRV==='pilot' ? '?s=pilot' : '?s='+SRV);
+/* 지도 확대: 폰에서는 처음부터 크게 */
+var Z = window.innerWidth < 700 ? 1.8 : 1, FULL = false;
 function load(){
   if(String(S[SRV].url).indexOf('여기에') >= 0){ app.innerHTML = '<div class="card">config.js에 '+esc(S[SRV].name)+' 서버 주소가 아직 없어요.</div>'; return; }
   fetch(S[SRV].url + '?api=publicStats&a=%5B%5D&_=' + Date.now(), { redirect:'follow' }).then(function(r){ return r.json(); }).then(function(d){
@@ -86,14 +94,29 @@ function mapSvg(v){
   var L = lines(), lm = Math.max.apply(null,[1].concat(L.map(function(l){ return l.n; })));
   L.forEach(function(l){ var a=by[l.a], b=by[l.b]; if(!a||!b) return; var k=l.n/lm;
     s += '<line x1="'+a.x+'" y1="'+(a.y*H/100)+'" x2="'+b.x+'" y2="'+(b.y*H/100)+'" stroke="#34C38F" stroke-linecap="round" stroke-opacity="'+(0.15+0.7*k).toFixed(2)+'" stroke-width="'+(0.2+2.2*k).toFixed(2)+'"/>'; });
-  var tags = '';
-  pts.map(function(q){ var x = v[q.id]||0, k = mx>mn ? (x-mn)/(mx-mn) : 1; return { q:q, v:x, k:k, r: pts.length > 15 ? 1.0+2.0*k : 1.3+2.7*k }; }).sort(function(a,b){ return b.r-a.r; }).forEach(function(p){
-    var cy = p.q.y*H/100, fs = Math.min(2.3, Math.max(1.3, p.r*0.85));
-    s += '<g><title>'+esc(p.q.id+' '+p.q.loc+' · '+p.v)+'</title><circle cx="'+p.q.x+'" cy="'+cy+'" r="'+p.r.toFixed(2)+'" fill="'+heat(p.k)+'" fill-opacity=".92" stroke="#fff" stroke-width=".3"/>'+
-      '<text x="'+p.q.x+'" y="'+(cy+fs*0.36)+'" text-anchor="middle" font-size="'+fs.toFixed(2)+'" font-weight="800" fill="#fff">'+p.v+'</text></g>';
-    tags += '<text x="'+p.q.x+'" y="'+(cy+p.r+1.7).toFixed(2)+'" text-anchor="middle" font-size="1.2" font-weight="500" fill="#1E2329" paint-order="stroke" stroke="#fff" stroke-width=".35">'+esc(p.q.loc)+'</text>';
-    var tw = 0.78*p.q.id.length+1.1, ty = cy-p.r-1.25;
-    tags += '<rect x="'+(p.q.x-tw/2).toFixed(2)+'" y="'+(ty-0.95).toFixed(2)+'" width="'+tw.toFixed(2)+'" height="1.9" rx=".95" fill="#1E2329" fill-opacity=".85"/><text x="'+p.q.x+'" y="'+(ty+0.42).toFixed(2)+'" text-anchor="middle" font-size="1.2" font-weight="700" fill="#fff">'+esc(p.q.id)+'</text>';
+  var ZK = 1/Math.sqrt(Z), tags = '', P = pts.map(function(q){ var x = v[q.id]||0, k = mx>mn ? (x-mn)/(mx-mn) : 1; return { q:q, v:x, k:k, cy:q.y*H/100, r: (pts.length > 15 ? 1.0+2.0*k : 1.3+2.7*k) * ZK }; });
+  /* 확대할수록 원·글씨를 상대적으로 작게 해서 가려진 이름이 드러나게 */
+  /* 겹침 검사용 상자: 원 먼저, 그다음 QR번호표, 장소 이름은 빈자리에만 */
+  var boxes = P.map(function(p){ return [p.q.x-p.r, p.cy-p.r, p.q.x+p.r, p.cy+p.r]; });
+  var free = function(bx){ return bx[0] >= 0.3 && bx[2] <= 99.7 && bx[1] >= 0 && bx[3] <= H && !boxes.some(function(o){ return bx[0] < o[2] && bx[2] > o[0] && bx[1] < o[3] && bx[3] > o[1]; }); };
+  P.slice().sort(function(a,b){ return b.r-a.r; }).forEach(function(p){
+    var n = String(p.v), fs = Math.min(2.3, Math.max(0.9, p.r*2.0/Math.max(2, n.length)*1.05));
+    s += '<g><title>'+esc(p.q.id+' '+p.q.loc+' · '+p.v)+'</title><circle cx="'+p.q.x+'" cy="'+p.cy+'" r="'+p.r.toFixed(2)+'" fill="'+heat(p.k)+'" fill-opacity=".92" stroke="#fff" stroke-width=".3"/>'+
+      '<text x="'+p.q.x+'" y="'+(p.cy+fs*0.36)+'" text-anchor="middle" font-size="'+fs.toFixed(2)+'" font-weight="800" fill="#fff">'+n+'</text></g>';
+  });
+  P.forEach(function(p){
+    var tw = (0.72*p.q.id.length+1.0)*ZK, th = 0.9*ZK, ty = p.cy-p.r-1.15*ZK, bx = [p.q.x-tw/2, ty-th, p.q.x+tw/2, ty+th];
+    if(!free(bx)){ ty = p.cy+p.r+1.15*ZK; bx = [p.q.x-tw/2, ty-th, p.q.x+tw/2, ty+th]; }
+    boxes.push(bx);
+    tags += '<rect x="'+bx[0].toFixed(2)+'" y="'+bx[1].toFixed(2)+'" width="'+tw.toFixed(2)+'" height="'+(2*th).toFixed(2)+'" rx="'+th.toFixed(2)+'" fill="#1E2329" fill-opacity=".85"/><text x="'+p.q.x+'" y="'+(ty+0.4*ZK).toFixed(2)+'" text-anchor="middle" font-size="'+(1.1*ZK).toFixed(2)+'" font-weight="700" fill="#fff">'+esc(p.q.id)+'</text>';
+  });
+  P.forEach(function(p){
+    var name = String(p.q.loc||''), w = (name.length*1.05+0.6)*ZK, g = ZK;
+    var cand = [[p.q.x, p.cy+p.r+1.6*g], [p.q.x, p.cy-p.r-2.6*g], [p.q.x+p.r+w/2+0.4*g, p.cy+0.4*g], [p.q.x-p.r-w/2-0.4*g, p.cy+0.4*g]];
+    for(var i = 0; i < cand.length; i++){
+      var c = cand[i], bx = [c[0]-w/2, c[1]-1.0*g, c[0]+w/2, c[1]+0.4*g];
+      if(free(bx)){ boxes.push(bx); tags += '<text x="'+c[0].toFixed(2)+'" y="'+c[1].toFixed(2)+'" text-anchor="middle" font-size="'+(1.15*g).toFixed(2)+'" font-weight="600" fill="#1E2329" paint-order="stroke" stroke="#fff" stroke-width="'+(0.4*g).toFixed(2)+'">'+esc(name)+'</text>'; break; }
+    }
   });
   return s + tags + '</svg>';
 }
@@ -102,10 +125,10 @@ function render(){
   var h = '';
   if(/시뮬레이션/.test(d.title)) h += '<div class="warn">이 화면의 수치는 <b>가상 데이터(시뮬레이션)</b>예요. 실제 운영 결과가 아니에요.</div>';
   h += '<div class="stats"><div class="stat"><b>'+t.scans.toLocaleString()+'</b><span>현장 스캔</span></div><div class="stat"><b>'+t.people.toLocaleString()+'</b><span>참여한 사람</span></div><div class="stat"><b>'+t.moves.toLocaleString()+'</b><span>거점 사이 이동</span></div><div class="stat"><b>'+d.dates.length+'일</b><span>기록된 날</span></div></div>';
-  h += '<div class="card"><div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-bottom:10px"><h2 style="margin:0">거점 이용 지도</h2><div style="display:flex;gap:6px">'+
+  h += '<div class="card mapcard'+(FULL?' full':'')+'"><div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-bottom:10px"><h2 style="margin:0">거점 이용 지도</h2><div class="zoom"><button id="zo" aria-label="축소">－</button><span id="zv">'+Math.round(Z*100)+'%</span><button id="zi" aria-label="확대">＋</button><button id="zf">'+(FULL?'닫기 ✕':'⛶ 크게 보기')+'</button></div><div style="display:flex;gap:6px">'+
     '<select id="fd"><option value="">전체 기간</option>'+d.dates.map(function(x){ return '<option'+(f.date===x?' selected':'')+'>'+x+'</option>'; }).join('')+'</select>'+
     '<select id="fm"><option value="scans"'+(f.metric==='scans'?' selected':'')+'>현장 스캔</option><option value="visitors"'+(f.metric==='visitors'?' selected':'')+'>방문자</option></select></div></div>'+
-    '<div class="map">'+mapSvg(v)+'</div><div class="legend"><span><i style="background:var(--blue)"></i>원 안 숫자 = '+(f.metric==='scans'?'현장 스캔':'방문자')+'</span><span><b class="qtag">Q-01</b>= QR 번호</span><span><i style="background:var(--mint)"></i>이어서 이동한 횟수</span></div></div>';
+    '<div class="map" id="mapbox"><div class="mz" style="width:'+(Z*100)+'%">'+mapSvg(v)+'</div></div><div class="legend"><span><i style="background:var(--blue)"></i>원 안 숫자 = '+(f.metric==='scans'?'현장 스캔':'방문자')+'</span><span><b class="qtag">Q-01</b>= QR 번호</span><span><i style="background:var(--mint)"></i>이어서 이동한 횟수</span></div><p class="hint">'+(Z>1?'지도를 손가락으로 밀어서 옆을 볼 수 있어요. ':'')+'겹쳐서 안 보이는 장소 이름은 ＋로 확대하면 나와요. 원에 손을 대면(마우스를 올리면) 이름이 보여요.</p></div>';
   // 시간대
   var hrs = []; for(var x = d.open; x < d.close; x++) hrs.push(x);
   var groups = d.dates.map(function(x){ return { name:x, dates:[x] }; });
@@ -126,6 +149,16 @@ function render(){
   h += '<div class="card"><h2>모듈 성과</h2>'+(m || '<p class="sub">퀴즈·코스 기록이 없어요.</p>')+'</div>';
   h += '<div class="card"><h2>팀 대항전</h2>'+d.teams.map(function(x,i){ return '<div class="row"><span>'+(i+1)+'. '+esc(x.team)+' <span class="sub">'+x.act+'명</span></span><b>'+x.score+'점</b></div>'; }).join('')+'</div></div>';
   app.innerHTML = h;
+  var setZ = function(z){
+    var mb = document.getElementById('mapbox');
+    var cx = (mb.scrollLeft + mb.clientWidth/2) / mb.scrollWidth, cy = (mb.scrollTop + mb.clientHeight/2) / mb.scrollHeight;
+    Z = Math.max(1, Math.min(4, Math.round(z*10)/10)); render();
+    var nb = document.getElementById('mapbox'); nb.scrollLeft = cx*nb.scrollWidth - nb.clientWidth/2; nb.scrollTop = cy*nb.scrollHeight - nb.clientHeight/2;
+  };
+  document.getElementById('zi').onclick = function(){ setZ(Z * 1.4); };
+  document.getElementById('zo').onclick = function(){ setZ(Z / 1.4); };
+  document.getElementById('zf').onclick = function(){ FULL = !FULL; document.body.style.overflow = FULL ? 'hidden' : ''; render(); };
+  var mb0 = document.getElementById('mapbox'); if(Z > 1 && !render._c){ render._c = 1; mb0.scrollLeft = (mb0.scrollWidth - mb0.clientWidth) / 2; mb0.scrollTop = (mb0.scrollHeight - mb0.clientHeight) / 2; }
   document.getElementById('fd').onchange = function(){ f.date = this.value; render(); };
   document.getElementById('fm').onchange = function(){ f.metric = this.value; render(); };
 }

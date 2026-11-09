@@ -3,8 +3,12 @@
  * fest : 유성국화축제 시뮬레이션 시트(사본)의 배포 주소 — '새 배포'로 받은 /exec 주소를 붙여넣기
  */
 window.QR_SERVERS = {
-  pilot: { name: 'S8동 시범운영', url: 'https://script.google.com/macros/s/AKfycbxg6erW2PqRI4ypkY9MXjvJ3IO1EdC_V4H1QQiyj-3ezjkTvNXHJxsigDJxlNmUuD6u/exec' },
-  fest:  { name: '유성국화축제 (시뮬레이션)', url: 'https://script.google.com/macros/s/AKfycbzhSpY7T8yz-EXSjXihWN0nqeTjhttKerSYSIJI9b_aE4nCJhTNaws7YPXXBg4CeIejQQ/exec',
+  pilot: { name: 'QR 보물찾기 시범운영', kind: '실제 운영 기록', icon: '🌼', color: '#F5B83D', soft: '#FFF6E0', ink: '#8A5A00',
+    period: '2026.10.26–27 · 한밭대 S8동 5층 복도',
+    url: 'https://script.google.com/macros/s/AKfycbxg6erW2PqRI4ypkY9MXjvJ3IO1EdC_V4H1QQiyj-3ezjkTvNXHJxsigDJxlNmUuD6u/exec' },
+  fest:  { name: '유성국화축제 QR 참여 플랫폼', kind: '시뮬레이션 · 가상 데이터', icon: '🧪', color: '#9B7BEA', soft: '#F2EDFD', ink: '#5B3FB0',
+    period: '제17회 유성국화축제 · 유림공원 · QR 23곳 예시 배치',
+    url: 'https://script.google.com/macros/s/AKfycbzhSpY7T8yz-EXSjXihWN0nqeTjhttKerSYSIJI9b_aE4nCJhTNaws7YPXXBg4CeIejQQ/exec',
     /* 참가자 화면 '축제장 한눈에 보기'의 구역 설명. mods = 이 구역에 속한 모듈 */
     zones: [
       { name: '게임 구역', where: '동편 · 어은교 건너 오른쪽', mods: ['보물', '퀴즈'], color: '#F5B83D',

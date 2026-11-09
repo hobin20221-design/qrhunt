@@ -125,13 +125,14 @@ input[type=text],input[type=tel]{width:100%;border:1px solid var(--line);border-
 <div class="sheet" id="sheet"><div class="in" id="sheetin"></div></div>
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
+<script src="mode.js"></script>
 <script>
 var S = window.QR_SERVERS || {}, SRV = (new URLSearchParams(location.search).get('s') || window.QR_DEFAULT || 'fest').replace(/[^a-z]/g,'');
 if(!S[SRV]) SRV = 'pilot';
-var API = S[SRV].url, SQ = SRV==='pilot' ? '' : '?s='+SRV, KEY = SRV==='pilot' ? 'qrhunt-token' : 'qrhunt-token-'+SRV;
+var API = S[SRV].url, SQ = '?s='+SRV, KEY = SRV==='pilot' ? 'qrhunt-token' : 'qrhunt-token-'+SRV;
 var app = document.getElementById('app'), sheetEl = document.getElementById('sheet'), sheetIn = document.getElementById('sheetin');
 var L = null, cur = (new URLSearchParams(location.search).get('c') || ''), sort = 'top', G = null, info = null, mode = 'join', team = null, shot = null;
-document.getElementById('back').href = 'portal.html' + (SRV==='pilot' ? '?s=pilot' : SQ);
+document.getElementById('back').href = SRV === 'pilot' ? 'home.html' : 'portal.html' + SQ;
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function tok(){ try{ return localStorage.getItem(KEY); }catch(e){ return window._t || null; } }
 function setTok(t){ try{ if(t) localStorage.setItem(KEY,t); else localStorage.removeItem(KEY); }catch(e){} window._t = t; }
@@ -155,6 +156,7 @@ function ordered(list){
   });
 }
 function start(){
+  if(SRV === 'pilot'){ app.innerHTML = '<div class="card"><h1 style="font-size:19px">자랑대회는 축제 시뮬레이션에만 있어요</h1><p class="desc">보물찾기 시범운영에서는 자랑대회를 열지 않았어요.</p><div class="acts"><a class="btn" href="contest.html?s=fest" style="text-decoration:none">축제 자랑대회 보기</a><a class="btn ghost" href="home.html" style="text-decoration:none">처음 화면</a></div></div>'; return; }
   if(String(API).indexOf('여기에') >= 0){ app.innerHTML = '<div class="card">config.js에 '+esc(S[SRV].name)+' 서버 주소가 아직 없어요.</div>'; return; }
   call('contests', [tok()], function(r){
     L = r; L.list = ordered(r.list || []);

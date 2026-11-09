@@ -120,7 +120,7 @@ details.guide[open]>summary .tog:after{content:'접기'}details.guide:not([open]
 </style>
 </head>
 <body>
-<header class="bar"><div class="brand"><i>Q</i><span id="ttl">QR 참여</span></div><nav><a href="portal.html" id="portal">포털</a><button type="button" id="home">홈</button></nav></header>
+<header class="bar"><div class="brand"><i>Q</i><span id="ttl">QR 참여</span></div><nav><a href="home.html" id="portal">처음</a><button type="button" id="home">내 화면</button></nav></header>
 <div class="wrap" id="app"><div class="load">불러오는 중이에요</div></div>
 <div id="cam" aria-modal="true" role="dialog" aria-label="QR 찍기">
   <video id="video" playsinline muted></video>
@@ -134,15 +134,19 @@ details.guide[open]>summary .tog:after{content:'접기'}details.guide:not([open]
   <button class="close" id="camclose" type="button">닫기</button>
 </div>
 <script src="config.js"></script>
+<script src="mode.js"></script>
 <script>
 /* 서버 주소는 config.js 한 곳에서 관리. ?s=fest 이면 축제(시뮬레이션) 서버, 없으면 시범운영 서버 (이미 붙인 QR 호환) */
-var SRV = (new URLSearchParams(location.search).get('s') || 'pilot').replace(/[^a-z]/g,'');
+var _P = new URLSearchParams(location.search);
+/* 서버 표시(s)도 QR도 없이 들어오면 처음 화면(시범운영/축제 시뮬레이션 고르기)으로 */
+if(!_P.get('s') && !_P.get('qr')) location.replace('home.html');
+var SRV = (_P.get('s') || 'pilot').replace(/[^a-z]/g,'');
 var SERVERS = window.QR_SERVERS || {};
 if(!SERVERS[SRV]) SRV = 'pilot';
 var API_URL = (SERVERS[SRV] && SERVERS[SRV].url) || '여기에';
-var SQ = SRV === 'pilot' ? '' : '?s=' + SRV;
+var SQ = '?s=' + SRV;
 var KEY = SRV === 'pilot' ? 'qrhunt-token' : 'qrhunt-token-' + SRV;
-document.getElementById('portal').href = 'portal.html' + (SRV === 'pilot' ? '?s=pilot' : SQ);
+document.getElementById('portal').href = 'home.html';
 /* 오픈채팅은 시범운영에서만 */
 var KAKAO = SRV === 'pilot' ? 'https://open.kakao.com/o/gEHbrsTi' : '';
 function kakaoSeen(){ try{ return localStorage.getItem('qrhunt-kakao') === '1'; }catch(e){ return false; } }
@@ -478,10 +482,11 @@ function renderStatus(r){
   h += courseCards(r, last && last.qr);
   /* 4) 플랫폼 메뉴 */
   h += '<div class="menu">';
-  if(info && info.hasContest) h += '<a href="contest.html'+SQ+'"><i>📸</i><b>자랑대회</b><span>사진 올리고 투표하기</span></a>';
+  if(info && info.hasContest && SRV !== 'pilot') h += '<a href="contest.html'+SQ+'"><i>📸</i><b>자랑대회</b><span>사진 올리고 투표하기</span></a>';
   h += '<a href="rank.html'+SQ+'"><i>🏆</i><b>전체 순위</b><span>팀 대항전 · 개인</span></a>';
-  h += '<a href="status.html?s='+SRV+'"><i>🗺️</i><b>공개 현황</b><span>어디에 사람이 많을까</span></a>';
-  h += '<a href="portal.html'+(SRV==='pilot'?'?s=pilot':SQ)+'"><i>🏠</i><b>포털</b><span>QR로 할 수 있는 것</span></a>';
+  h += '<a href="status.html'+SQ+'"><i>🗺️</i><b>공개 현황</b><span>어디에 사람이 많을까</span></a>';
+  h += SRV === 'pilot' ? '<a href="home.html"><i>🏠</i><b>처음 화면</b><span>시범운영 · 축제 시뮬레이션</span></a>'
+    : '<a href="portal.html'+SQ+'"><i>🧭</i><b>플랫폼 소개</b><span>QR로 할 수 있는 것</span></a>';
   h += '</div>';
   var my = r.teams.map(function(t){return t.team;}).indexOf(m.team)+1;
   h += '<div class="card"><h3>팀 대항전'+(my?', 우리 '+my+'위':'')+'</h3>'+

@@ -3,107 +3,141 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>QR 보물찾기 실시간 순위</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<title>실시간 순위</title>
 <style>
-:root{--navy:#14213D;--ink:#14213D;--sub:#4A5568;--line:#DDE1E8;--paper:#F6F5F0;--surface:#FFFFFF;--accent:#F5B700;--accent-soft:#FFF3CC;--bad:#B03A2E}
+:root{--bg:#F3F5F9;--card:#FFF;--ink:#1E2329;--sub:#6B7480;--muted:#9AA3AF;--line:#E7EAF0;--blue:#3D8BFD;--blue-soft:#EAF2FF;--mint:#34C38F;--mint-soft:#E6F7F0;--yellow:#F5B83D;--yellow-soft:#FFF6E0;--slate-soft:#EEF1F5;--bad:#E5534B;--gold:#F5B83D;--silver:#AEB8C6;--bronze:#D49A6A}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--paper);color:var(--ink);font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.5}
-.wrap{max-width:960px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom))}
-.eyebrow{font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--sub)}
-h1{font-family:"Black Han Sans","Noto Sans KR",sans-serif;font-weight:400;font-size:clamp(34px,7vw,56px);line-height:1.05;margin:6px 0 16px}
-.round{background:var(--accent);border-radius:6px;padding:16px 18px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between;margin-bottom:12px}
-.round b{font-family:"Black Han Sans","Noto Sans KR",sans-serif;font-weight:400;font-size:clamp(22px,4.5vw,30px)}
-.round span{font-weight:700;font-size:15px}
-.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
-.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
-.stat b{display:block;font-size:30px;line-height:1.1;font-weight:900}
-.stat span{font-size:13px;color:var(--sub);font-weight:700}
-.cols{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
-@media(min-width:760px){.cols{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)}}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px}
-h2{font-size:17px;font-weight:900;margin:0 0 4px}
-.note{font-size:13px;color:var(--sub);margin:0 0 12px}
-.team{display:grid;grid-template-columns:64px minmax(0,1fr) 72px;gap:10px;align-items:center;margin:10px 0}
-.team b{font-size:15px}
-.track{height:14px;background:var(--paper);border-radius:3px;overflow:hidden}
-.fill{height:100%;background:var(--navy);border-radius:3px}
-.team.lead .fill{background:var(--accent)}
-.team em{font-style:normal;font-weight:900;text-align:right;font-variant-numeric:tabular-nums}
-.team small{display:block;font-size:11px;color:var(--sub);font-weight:500}
-table{width:100%;border-collapse:collapse}
-th{font-size:12px;color:var(--sub);text-align:left;font-weight:700;padding:0 6px 6px;border-bottom:2px solid var(--navy)}
-td{padding:9px 6px;border-bottom:1px solid var(--line);font-size:15px}
-td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
-td.rk{width:44px;font-weight:900}
-tr.p1 td{background:var(--accent-soft)}
-tr.p1 td.rk,tr.p2 td.rk,tr.p3 td.rk{font-family:"Black Han Sans","Noto Sans KR",sans-serif;font-weight:400;font-size:18px}
-.empty{color:var(--sub);text-align:center;padding:28px 0}
-.foot{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-top:14px;font-size:13px;color:var(--sub)}
-.go{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;font-weight:700;border-radius:6px;padding:12px 18px;min-height:44px}
-.go:hover{background:#0b1426}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.5;letter-spacing:-.01em}
+.bar{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;background:var(--card);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;min-width:0}
+.brand i{flex:none;width:26px;height:26px;border-radius:8px;background:var(--blue);color:#fff;display:grid;place-items:center;font-style:normal;font-size:13px}
+.brand span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar nav{display:flex;gap:6px;flex:none}
+.bar nav a{background:var(--slate-soft);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;color:var(--ink);text-decoration:none}
+.wrap{max-width:980px;margin:0 auto;padding:16px 16px calc(40px + env(safe-area-inset-bottom))}
+.hero{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px;margin:4px 2px 14px}
+.hero h1{font-size:24px;margin:0;line-height:1.2}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--sub)}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 0 rgba(52,195,143,.6);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(52,195,143,0)}100%{box-shadow:0 0 0 0 rgba(52,195,143,0)}}
+.seg{display:inline-flex;background:var(--slate-soft);border-radius:12px;padding:3px;margin-bottom:12px}
+.seg button{border:0;background:none;border-radius:9px;padding:7px 16px;font:inherit;font-size:14px;font-weight:700;color:var(--sub);cursor:pointer}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.chip{display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--yellow-soft);color:#8A5A00}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.stat{background:var(--card);border-radius:16px;padding:12px 14px}
+.stat b{display:block;font-size:22px;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat span{font-size:12px;color:var(--sub)}
+@media(max-width:420px){.stat{padding:11px 10px}.stat b{font-size:18px}}
+.cols{display:grid;gap:12px;align-items:start}
+@media(min-width:820px){.cols{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}}
+.card{background:var(--card);border-radius:18px;padding:16px}
+h2{font-size:16px;margin:0 0 2px}
+.note{font-size:12.5px;color:var(--sub);margin:0 0 12px}
+.team{display:grid;grid-template-columns:26px 74px minmax(0,1fr) 70px;gap:8px;align-items:center;padding:7px 0}
+.team .no{font-weight:800;color:var(--muted);text-align:center}
+.team b{font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track{height:12px;background:var(--slate-soft);border-radius:999px;overflow:hidden}
+.fill{height:100%;background:var(--blue);border-radius:999px;transition:width .6s}
+.team.lead .fill{background:var(--yellow)}.team.lead .no{color:#B07800}
+.team em{font-style:normal;font-weight:800;text-align:right;font-variant-numeric:tabular-nums;font-size:14.5px}
+.team small{display:block;font-size:11px;color:var(--muted);font-weight:500}
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:8px;align-items:end;margin-bottom:12px}
+.pod{border-radius:16px;padding:12px 8px 10px;text-align:center;background:var(--slate-soft);min-width:0}
+.pod .m{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;color:#fff;font-weight:800;font-size:14px}
+.pod b{display:block;font-size:14px;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pod small{display:block;font-size:11.5px;color:var(--sub)}
+.pod strong{display:block;font-size:20px;font-variant-numeric:tabular-nums;margin-top:2px}
+.pod.p1{background:var(--yellow-soft);padding-top:18px}.pod.p1 .m{background:var(--gold);width:36px;height:36px;font-size:16px}.pod.p1 strong{font-size:24px}
+.pod.p2 .m{background:var(--silver)}.pod.p3 .m{background:var(--bronze)}
+.row{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 4px;border-top:1px solid var(--line);font-size:14.5px}
+.row .no{font-weight:800;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.row span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row small{color:var(--muted);font-size:12px;margin-left:6px}
+.row em{font-style:normal;font-weight:800;font-variant-numeric:tabular-nums}
+.empty{color:var(--sub);text-align:center;padding:24px 0;font-size:14px}
+.foot{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-top:14px;font-size:12.5px;color:var(--sub)}
+.go{display:inline-block;background:var(--ink);color:#fff;text-decoration:none;font-weight:700;border-radius:12px;padding:11px 18px;font-size:14px}
 .err{color:var(--bad);font-weight:700}
+/* 불러오는 동안 자리 잡아 두기 */
+.sk{background:linear-gradient(90deg,#E9EDF3 25%,#F3F5F9 50%,#E9EDF3 75%);background-size:200% 100%;animation:sk 1.2s infinite;border-radius:10px}
+@keyframes sk{to{background-position:-200% 0}}
+.stale{opacity:.65;transition:opacity .2s}
+@media (prefers-reduced-motion:reduce){.live i,.sk{animation:none}}
 </style>
 </head>
 <body>
+<header class="bar"><div class="brand"><i>Q</i><span id="ttl">QR 참여</span></div><nav><a href="home.html" id="portal">처음</a><a href="./" id="home">내 화면</a></nav></header>
 <main class="wrap">
-  <div class="eyebrow">2026 학생 리빙랩 · 도시공학과 복도</div>
-  <h1><span id="ttl">QR 보물찾기</span><br>실시간 순위</h1>
-  <div id="app"><p class="empty">순위를 불러오는 중이에요</p></div>
-  <div class="foot">
-    <span id="stamp">같은 점수면 먼저 달성한 사람이 위예요 · 1분마다 자동 갱신</span>
-    <a class="go" id="golink" href="./">참가하러 가기</a>
+  <div class="hero"><h1>실시간 순위</h1><span class="live" id="live"><i></i><span id="stamp">불러오는 중</span></span></div>
+  <div class="seg" id="seg"><button data-v="all" class="on">전체 누적</button><button data-v="today">오늘</button></div>
+  <div id="app">
+    <div class="stats"><div class="stat sk" style="height:62px"></div><div class="stat sk" style="height:62px"></div><div class="stat sk" style="height:62px"></div></div>
+    <div class="cols"><div class="card"><div class="sk" style="height:200px"></div></div><div class="card"><div class="sk" style="height:320px"></div></div></div>
   </div>
+  <div class="foot"><span>같은 점수면 먼저 달성한 사람이 위예요 · 1분마다 자동 갱신</span><a class="go" id="golink" href="./">참가하러 가기</a></div>
 </main>
 <script src="config.js"></script>
+<script>if(!new URLSearchParams(location.search).get('s')) history.replaceState(null,'',location.pathname+'?s=pilot');</script>
+<script src="mode.js"></script>
 <script>
 var SRV = (new URLSearchParams(location.search).get('s') || 'pilot').replace(/[^a-z]/g,'');
 if(!(window.QR_SERVERS||{})[SRV]) SRV = 'pilot';
-var API_URL = window.QR_SERVERS[SRV].url, SQ = SRV === 'pilot' ? '' : '?s=' + SRV;
-var app = document.getElementById('app'), stampEl = document.getElementById('stamp'), last = null;
+var API_URL = window.QR_SERVERS[SRV].url, SQ = '?s=' + SRV;
+var CK = 'qr-rank-cache-' + SRV, app = document.getElementById('app'), view = 'all', last = null, busy = false;
+function nf(n){ return Number(n||0).toLocaleString('ko-KR'); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
-function minsLeft(next){
-  var m = /^(\d\d):00$/.exec(next || ''); if(!m) return '';
-  var now = new Date(), t = new Date(now); t.setHours(parseInt(m[1],10), 0, 0, 0);
-  var d = Math.round((t - now) / 60000);
-  return d > 0 ? ' · '+d+'분 남음' : '';
+function roundChip(d){
+  var r = d.round; if(!d.hasTreasure || !r) return '';
+  return '<span class="chip">'+(r.open ? '🌼 보물 '+r.round+'회차'+(r.next ? ' · 다음 변경 '+esc(r.next) : '') : (r.next ? '운영 전 · '+esc(r.next)+' 시작' : '운영 종료'))+'</span>';
 }
-function roundHtml(r){
-  if(r.open) return '<div class="round"><b>지금 '+r.round+'회차 · '+esc(r.from)+'–'+esc(r.to)+'</b><span>'+(r.next ? '다음 변경 '+esc(r.next)+minsLeft(r.next) : '마지막 회차')+'</span></div>';
-  return '<div class="round"><b>'+(r.next ? '운영시간이 아니에요' : '운영이 끝났어요')+'</b><span>'+(r.next ? '다음 시작 '+esc(r.next) : '참여해 주셔서 고마워요')+'</span></div>';
-}
-function render(d){
-  var h = roundHtml(d.round);
+function render(d, stale){
+  last = d;
   if(d.title){ document.getElementById('ttl').textContent = d.title; document.title = d.title + ' 실시간 순위'; }
-  h += '<div class="stats"><div class="stat"><b>'+d.players+'명</b><span>점수를 얻은 참가자</span></div><div class="stat"><b>'+d.total+'점</b><span>지금까지 쌓인 점수</span></div></div>';
-  var max = Math.max(1, Math.max.apply(null, d.teams.map(function(t){ return t.score; })));
-  h += '<div class="cols"><section class="card"><h2>팀 대항전</h2><p class="note">팀별 점수를 모두 합산</p>'+
-    d.teams.map(function(t,i){ return '<div class="team'+(i===0&&t.score>0?' lead':'')+'"><b>'+esc(t.team)+'</b><div class="track" role="img" aria-label="'+esc(t.team)+' '+t.score+'점"><div class="fill" style="width:'+(t.score/max*100)+'%"></div></div><em>'+t.score+'점<small>'+t.act+'명 참여</small></em></div>'; }).join('')+
-    '</section>';
-  h += '<section class="card"><h2>개인 순위</h2><p class="note">상위 30명 · 같은 점수면 먼저 달성한 사람이 위</p>';
-  if(d.people.length){
-    h += '<table><thead><tr><th>순위</th><th>닉네임</th><th>팀</th><th class="n">점수</th></tr></thead><tbody>'+
-      d.people.map(function(p,i){ return '<tr class="p'+(i+1)+'"><td class="rk">'+(i+1)+'</td><td>'+esc(p.nick)+'</td><td>'+esc(p.team)+'</td><td class="n"><b>'+p.hits+'</b>점</td></tr>'; }).join('')+
-      '</tbody></table>';
-  } else h += '<p class="empty">아직 점수를 얻은 사람이 없어요.<br>첫 번째 주인공이 되어보세요.</p>';
+  var v = view === 'today' && d.today ? d.today : d, h = '';
+  var lead = v.teams[0] && v.teams[0].score > 0 ? v.teams[0].team : '-';
+  h += '<div class="stats"><div class="stat"><b>'+v.players+'명</b><span>점수 얻은 사람</span></div><div class="stat"><b>'+v.total+'점</b><span>'+(view==='today'?'오늘':'전체')+' 쌓인 점수</span></div><div class="stat"><b>'+esc(lead)+'</b><span>1위 팀</span></div></div>';
+  var max = Math.max(1, Math.max.apply(null, v.teams.map(function(t){ return t.score; })));
+  h += '<div class="cols"><section class="card"><h2>팀 대항전 '+roundChip(d)+'</h2><p class="note">팀원 점수 합계'+(view==='today'?' · 오늘만':'')+'</p>'+
+    v.teams.map(function(t,i){ return '<div class="team'+(i===0&&t.score>0?' lead':'')+'"><span class="no">'+(i+1)+'</span><b>'+esc(t.team)+'</b><div class="track" role="img" aria-label="'+esc(t.team)+' '+t.score+'점"><div class="fill" style="width:'+(t.score/max*100)+'%"></div></div><em>'+t.score+'점<small>'+t.act+'명 참여</small></em></div>'; }).join('')+'</section>';
+  h += '<section class="card"><h2>개인 순위</h2><p class="note">상위 30명'+(view==='today'?' · 오늘 얻은 점수':'')+'</p>';
+  var P = v.people;
+  if(P.length){
+    var pod = function(p, i){ return p ? '<div class="pod p'+(i+1)+'"><span class="m">'+(i+1)+'</span><b>'+esc(p.nick)+'</b><small>'+esc(p.team)+'</small><strong>'+p.hits+'점</strong></div>' : '<div></div>'; };
+    h += '<div class="podium">'+pod(P[1],1)+pod(P[0],0)+pod(P[2],2)+'</div>';
+    h += P.slice(3).map(function(p,i){ return '<div class="row"><span class="no">'+(i+4)+'</span><span>'+esc(p.nick)+'<small>'+esc(p.team)+'</small></span><em>'+p.hits+'점</em></div>'; }).join('');
+  } else h += '<p class="empty">'+(view==='today'?'오늘은':'아직')+' 점수를 얻은 사람이 없어요.<br>첫 번째 주인공이 되어보세요.</p>';
   h += '</section></div>';
   app.innerHTML = h;
-  stampEl.textContent = '마지막 갱신 '+String(d.stamp||'').slice(11,16)+' · 1분마다 자동 갱신';
+  app.className = stale ? 'stale' : '';
+  document.getElementById('stamp').textContent = (stale ? '지난 기록 · 새로 불러오는 중' : '마지막 갱신 '+String(d.stamp||'').slice(11,16));
 }
 function load(){
-  fetch(API_URL + '?api=board&a=%5B%5D&_=' + Date.now(), { redirect: 'follow' })
+  if(busy) return; busy = true;
+  var ctl = window.AbortController ? new AbortController() : null, t = setTimeout(function(){ if(ctl) ctl.abort(); }, 20000);
+  fetch(API_URL + '?api=board&a=%5B%5D&_=' + Date.now(), ctl ? { redirect:'follow', signal: ctl.signal } : { redirect:'follow' })
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if(d && d.error){ throw new Error(d.error); }
-      last = d; render(d);
+      if(d && d.error) throw new Error(d.error);
+      render(d, false);
+      try{ localStorage.setItem(CK, JSON.stringify(d)); }catch(e){}
     })
     .catch(function(){
       if(!last) app.innerHTML = '<p class="empty err">순위를 불러오지 못했어요. 잠시 뒤 새로고침해 주세요.</p>';
-    });
+      else document.getElementById('stamp').textContent = '연결이 잠깐 끊겼어요 · 1분 뒤 다시 시도';
+    })
+    .then(function(){ clearTimeout(t); busy = false; });
 }
+document.getElementById('seg').onclick = function(e){
+  var v = e.target.getAttribute && e.target.getAttribute('data-v'); if(!v) return;
+  view = v; [].forEach.call(this.children, function(b){ b.className = b.getAttribute('data-v') === v ? 'on' : ''; });
+  if(last) render(last, app.className === 'stale');
+};
 document.getElementById('golink').href = './' + SQ;
-document.querySelector('.eyebrow').textContent = '2026 학생 리빙랩 · ' + window.QR_SERVERS[SRV].name;
+document.getElementById('home').href = './' + SQ;
+document.getElementById('portal').href = 'home.html';
+/* 지난번에 본 순위를 먼저 바로 보여 주고, 뒤에서 새로 불러옴 */
+try{ var c = JSON.parse(localStorage.getItem(CK) || 'null'); if(c) render(c, true); }catch(e){}
 load();
 setInterval(function(){ if(!document.hidden) load(); }, 60000);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>보물사냥꾼 QR 플랫폼</title>
+<style>
+:root{--bg:#F3F5F9;--card:#FFF;--ink:#1E2329;--sub:#6B7480;--muted:#9AA3AF;--line:#E7EAF0;--blue:#3D8BFD}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.5;letter-spacing:-.01em}
+.wrap{max-width:1080px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom))}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px}
+.brand i{width:28px;height:28px;border-radius:9px;background:var(--blue);color:#fff;display:grid;place-items:center;font-style:normal;font-size:14px}
+.hero{margin:22px 2px 20px}
+.hero small{font-size:13px;font-weight:700;color:var(--sub)}
+.hero h1{font-size:clamp(26px,5vw,38px);line-height:1.2;margin:4px 0 8px}
+.hero p{margin:0;color:var(--sub);max-width:640px}
+.two{display:grid;gap:14px}
+@media(min-width:860px){.two{grid-template-columns:1fr 1fr}}
+.mode{background:var(--card);border-radius:22px;overflow:hidden;display:flex;flex-direction:column}
+.mode .head{padding:20px 20px 16px;background:var(--soft)}
+.tag{display:inline-block;font-size:12px;font-weight:800;border-radius:999px;padding:3px 10px;background:var(--c);color:#fff}
+.mode h2{font-size:22px;margin:10px 0 2px;line-height:1.25}
+.mode .per{font-size:13px;color:var(--ink2);font-weight:600}
+.mode .desc{font-size:14px;color:var(--sub);margin:10px 0 0}
+.nums{display:flex;gap:18px;margin-top:12px}
+.nums div b{display:block;font-size:22px;font-variant-numeric:tabular-nums;line-height:1.2}
+.nums div span{font-size:12px;color:var(--sub)}
+.body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1}
+.btn{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);background:#F7F8FA;border-radius:14px;padding:12px 14px}
+.btn i{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-style:normal;font-size:18px;background:#fff}
+.btn b{display:block;font-size:15px}.btn span{display:block;font-size:12.5px;color:var(--sub)}
+.btn.main{background:var(--c);color:#fff}.btn.main span{color:rgba(255,255,255,.85)}.btn.main i{background:rgba(255,255,255,.25)}
+.try{margin-top:4px}
+.try p{font-size:12.5px;color:var(--sub);margin:4px 2px 6px;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips a{text-decoration:none;font-size:13px;font-weight:700;border-radius:999px;padding:6px 11px;background:#F3F5F9;color:var(--ink);border:1px solid var(--line)}
+.chips a em{font-style:normal;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}
+.warn{font-size:12.5px;color:var(--ink2);background:var(--soft);border-radius:12px;padding:8px 12px}
+footer{margin-top:26px;font-size:12.5px;color:var(--muted);text-align:center;line-height:1.7}
+footer a{color:var(--sub)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><i>Q</i>보물사냥꾼 QR 플랫폼</div>
+  <section class="hero">
+    <small>한밭대학교 도시공학과 '보물사냥꾼' · 2026 지역문제 해결 학생 리빙랩</small>
+    <h1>스캔에서 참여로</h1>
+    <p>QR 한 장으로 참여를 만들고, 그 기록으로 공간을 읽어요. 실제로 운영한 시범운영과, 유성국화축제에 적용해 본 시뮬레이션을 나눠서 볼 수 있어요.</p>
+  </section>
+  <div class="two" id="two"></div>
+  <footer>
+    운영자 관제(관리자 코드 필요): <a id="ad-pilot" target="_blank" rel="noopener">시범운영</a> · <a id="ad-fest" target="_blank" rel="noopener">축제 시뮬레이션</a><br>
+    기본 지도: 제17회 유성국화축제 안내도(유성구) 재구성 · 축제 거점은 기능 시연용 예시 배치
+  </footer>
+</div>
+<script src="config.js"></script>
+<script>
+var S = window.QR_SERVERS || {};
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function nf(n){ return Number(n||0).toLocaleString('ko-KR'); }
+function box(k, html){
+  var m = S[k]; if(!m) return '';
+  return '<section class="mode" style="--c:'+m.color+';--soft:'+m.soft+';--ink2:'+m.ink+'"><div class="head"><span class="tag">'+m.icon+' '+esc(m.kind)+'</span>'+
+    '<h2>'+esc(m.name)+'</h2><div class="per">'+esc(m.period||'')+'</div>'+html.head+'<div class="nums" id="n-'+k+'"></div></div><div class="body">'+html.body+'</div></section>';
+}
+var Q = function(k){ return '?s=' + k; };
+var MC = { '안내':'#64748B', '보물':'#F5B83D', '퀴즈':'#9B7BEA', '코스':'#34C38F' };
+var pilot = box('pilot', {
+  head: '<p class="desc">복도 곳곳에 붙인 QR로 회차마다 바뀌는 보물을 찾은 실제 운영이에요. 참가자·스캔 기록은 모두 실제 데이터예요.</p>',
+  body: '<a class="btn main" href="rank.html'+Q('pilot')+'"><i>🏆</i><div><b>최종 순위</b><span>팀 대항전 · 개인 순위</span></div></a>'+
+        '<a class="btn" href="status.html'+Q('pilot')+'"><i>🗺️</i><div><b>공개 현황</b><span>S8동 도면 위 거점별 스캔 · 이동</span></div></a>'+
+        '<a class="btn" href="./'+Q('pilot')+'"><i>📷</i><div><b>참가자 화면</b><span>내 기록 보기 · 로그인</span></div></a>'
+});
+var tries = [['Y-01','안내','중앙 허브'],['Y-02','안내','주차장 입구'],['Y-09','보물','보물'],['Y-13','퀴즈','퀴즈'],['Y-18','코스','데이트 코스'],['Y-08','안내','밤티 인증']];
+var fest = box('fest', {
+  head: '<p class="desc">같은 시스템을 유림공원 축제장에 옮겨 본 모의 운영이에요. 참가자 2,941명 · 16일 운영을 가정한 가상 데이터로 기능을 보여 줘요.</p>',
+  body: '<div class="warn">여기 나오는 사람·점수·사진 수치는 실제가 아니에요.</div>'+
+        '<a class="btn main" href="portal.html'+Q('fest')+'"><i>🧭</i><div><b>플랫폼 소개</b><span>QR 하나로 할 수 있는 것 · 구역 안내</span></div></a>'+
+        '<div class="try"><p>📷 QR을 찍었다고 치고 체험해 보기</p><div class="chips">'+tries.map(function(t){ return '<a href="./?s=fest&qr='+t[0]+'"><em style="background:'+MC[t[1]]+'"></em>'+t[0]+' '+esc(t[2])+'</a>'; }).join('')+'</div></div>'+
+        '<a class="btn" href="contest.html'+Q('fest')+'"><i>📸</i><div><b>자랑대회</b><span>밤티 자랑대회 · 국화 데이트 사진</span></div></a>'+
+        '<a class="btn" href="rank.html'+Q('fest')+'"><i>🏆</i><div><b>실시간 순위</b><span>대학 대항전 · 개인 · 오늘</span></div></a>'+
+        '<a class="btn" href="status.html'+Q('fest')+'"><i>🗺️</i><div><b>공개 현황</b><span>축제장 지도 위 거점별 이용 · 동선</span></div></a>'
+});
+document.getElementById('two').innerHTML = pilot + fest;
+['pilot','fest'].forEach(function(k){
+  if(!S[k]) return;
+  var a = document.getElementById('ad-'+k); if(a) a.href = S[k].url + '?page=admin';
+  /* 참가자 수·점수는 순위 데이터에서 가져와 살짝 보여 줌 (실패해도 화면은 그대로) */
+  fetch(S[k].url + '?api=board&a=%5B%5D&_=' + Date.now(), { redirect:'follow' }).then(function(r){ return r.json(); }).then(function(d){
+    if(!d || d.error) return;
+    var lead = d.teams && d.teams[0] && d.teams[0].score > 0 ? d.teams[0].team : '-';
+    document.getElementById('n-'+k).innerHTML = '<div><b>'+nf(d.players)+'명</b><span>점수 얻은 참가자</span></div><div><b>'+nf(d.total)+'점</b><span>쌓인 점수</span></div><div><b>'+esc(lead)+'</b><span>1위 팀</span></div>';
+  }).catch(function(){});
+});
+</script>
+</body>
+</html>

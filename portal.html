@@ -45,7 +45,7 @@ footer{font-size:12.5px;color:var(--muted);text-align:center;margin-top:24px}
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><div class="brand"><i>Q</i>축제 QR 참여 플랫폼</div><span class="srv" id="srv"></span></div>
+  <div class="top"><div class="brand"><i>Q</i>축제 QR 참여 플랫폼</div><a class="srv" id="srv" href="home.html" style="text-decoration:none">← 처음 화면</a></div>
 
   <section class="hero">
     <small>2026 학생 리빙랩 · 유성국화축제</small>
@@ -75,8 +75,8 @@ footer{font-size:12.5px;color:var(--muted);text-align:center;margin-top:24px}
   <section class="card">
     <h2>구역 안내</h2>
     <p class="note">기능 시연용 예시 배치예요. 실제 설치 위치는 현장 조사와 협의를 거쳐 정해요.</p>
-    <img class="mapimg" src="yuseong_map.png?v=1" alt="유림공원 축제장 구역 지도: 동편 게임 구역, 서편 데이트·사진 구역">
-    <div class="legend"><span><i style="background:var(--yellow)"></i>게임 구역 · 보물 3 + 퀴즈 2</span><span><i style="background:var(--purple)"></i>데이트·사진 구역 · 코스 4</span><span><i style="background:var(--slate)"></i>중앙 허브 + 주차·입구 3</span></div>
+    <img class="mapimg" src="yuseong_map.png?v=3" alt="유림공원 축제장 구역 지도: 동편 게임 구역, 서편 데이트·사진 구역">
+    <div class="legend"><span><i style="background:var(--yellow)"></i>게임 구역 · 보물 4 + 퀴즈 3</span><span><i style="background:var(--purple)"></i>데이트·사진 구역 · 코스 2개(8곳)</span><span><i style="background:var(--slate)"></i>안내 8곳 · 중앙 허브·주차장·입구·무대·체험부스</span></div>
   </section>
 
   <section class="card">
@@ -92,12 +92,14 @@ footer{font-size:12.5px;color:var(--muted);text-align:center;margin-top:24px}
   <footer>한밭대학교 도시공학과 '보물사냥꾼' · 2026 지역문제 해결 학생 리빙랩<br>기본 지도: 제17회 유성국화축제 안내도(유성구) 재구성</footer>
 </div>
 <script src="config.js"></script>
+<script>if(!new URLSearchParams(location.search).get('s')) history.replaceState(null,'',location.pathname+'?s='+(window.QR_DEFAULT||'fest'));</script>
+<script src="mode.js"></script>
 <script>
 var SRV = (new URLSearchParams(location.search).get('s') || window.QR_DEFAULT || 'fest').replace(/[^a-z]/g,'');
 if(!(window.QR_SERVERS||{})[SRV]) SRV = 'pilot';
-var SQ = SRV === 'pilot' ? '' : '?s=' + SRV;
-document.getElementById('srv').textContent = window.QR_SERVERS[SRV].name;
-[].forEach.call(document.querySelectorAll('[data-href]'), function(a){ a.href = a.getAttribute('data-href') + (a.getAttribute('data-href')==='status.html' ? '?s='+SRV : SQ); });
+var SQ = '?s=' + SRV;
+if(SRV === 'pilot') location.replace('home.html');
+[].forEach.call(document.querySelectorAll('[data-href]'), function(a){ a.href = (a.getAttribute('data-href') === 'index.html' ? './' : a.getAttribute('data-href')) + SQ + (a.getAttribute('data-href') === 'index.html' && SRV === 'fest' ? '&qr=Y-01' : ''); });
 </script>
 </body>
 </html>
