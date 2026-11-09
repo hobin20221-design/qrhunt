@@ -4,7 +4,16 @@
  */
 window.QR_SERVERS = {
   pilot: { name: 'S8동 시범운영', url: 'https://script.google.com/macros/s/AKfycbxg6erW2PqRI4ypkY9MXjvJ3IO1EdC_V4H1QQiyj-3ezjkTvNXHJxsigDJxlNmUuD6u/exec' },
-  fest:  { name: '유성국화축제 (시뮬레이션)', url: 'https://script.google.com/macros/s/AKfycbzhSpY7T8yz-EXSjXihWN0nqeTjhttKerSYSIJI9b_aE4nCJhTNaws7YPXXBg4CeIejQQ/exec' }
+  fest:  { name: '유성국화축제 (시뮬레이션)', url: 'https://script.google.com/macros/s/AKfycbzhSpY7T8yz-EXSjXihWN0nqeTjhttKerSYSIJI9b_aE4nCJhTNaws7YPXXBg4CeIejQQ/exec',
+    /* 참가자 화면 '축제장 한눈에 보기'의 구역 설명. mods = 이 구역에 속한 모듈 */
+    zones: [
+      { name: '게임 구역', where: '동편 · 어은교 건너 오른쪽', mods: ['보물', '퀴즈'], color: '#F5B83D',
+        desc: '보물 QR은 2시간마다 몇 곳이 새로 보물이 돼요. 퀴즈 QR은 찍으면 문제가 열리고 한 번만 답할 수 있어요.' },
+      { name: '데이트·사진 구역', where: '서편 · 유림공원 안', mods: ['코스'], color: '#9B7BEA',
+        desc: '국화 데이트 코스와 포토존 코스 스탬프를 모아요. 코스를 다 돌면 완주 보너스, 여기서 찍은 사진으로 자랑대회에 나갈 수 있어요.' },
+      { name: '안내 QR', where: '입구 · 주차장 · 무대 · 체험부스', mods: ['안내'], color: '#64748B',
+        desc: '들어온 곳에 맞는 길 안내가 열려요. 체험부스 QR을 찍으면 밤티 자랑대회에 작품을 올릴 수 있어요.' }
+    ] }
 };
 /* 포털·자랑대회·공개현황이 기본으로 쓰는 서버 */
 window.QR_DEFAULT = 'fest';

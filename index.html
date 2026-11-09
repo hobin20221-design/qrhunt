@@ -69,6 +69,19 @@ input{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px 12
 /* 코스 지도 */
 .route{border-radius:14px;overflow:hidden;background:#FAFBFD;margin:8px 0 10px;border:1px solid var(--line)}
 .route svg{display:block;width:100%;height:auto}
+details.guide>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:800;font-size:16px}
+details.guide>summary::-webkit-details-marker{display:none}
+details.guide>summary .tog{margin-left:auto;font-size:12px;font-weight:600;color:var(--blue)}
+details.guide[open]>summary .tog:after{content:'접기'}details.guide:not([open])>summary .tog:after{content:'펼치기'}
+.here{display:flex;align-items:center;gap:6px;background:var(--blue-soft);color:#1F5FBF;border-radius:12px;padding:8px 12px;font-size:13.5px;font-weight:700;margin:10px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--sub);margin:-2px 2px 10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+.zone{display:flex;gap:10px;padding:11px 12px;border-radius:14px;background:#F7F8FA;margin-top:8px;border-left:5px solid var(--c)}
+.zone.on{background:var(--blue-soft)}
+.zone b{display:block;font-size:14.5px}.zone small{font-weight:600;color:var(--sub);font-size:12px;margin-left:4px}
+.zone p{margin:3px 0 4px;font-size:13px;color:var(--sub);line-height:1.45}
+.zone .cnt{font-size:12px;font-weight:700;color:var(--ink)}
+.zone .now{font-size:11px;font-weight:800;color:#fff;background:var(--blue);border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:1px}
 .prog{height:8px;background:var(--slate-soft);border-radius:6px;overflow:hidden;margin:6px 0 10px}
 .prog i{display:block;height:100%;background:var(--mint)}
 .stops{display:grid;gap:6px}
@@ -176,7 +189,13 @@ function loadPlan(cb){
   if(!info || !info.plan || info.geo === '위경도') return cb();
   if(plan) return cb();
   var im = new Image();
-  im.onload = function(){ plan = { src: info.plan, w: im.naturalWidth, h: im.naturalHeight }; cb(); };
+  im.onload = function(){
+    plan = { src: info.plan, w: im.naturalWidth, h: im.naturalHeight };
+    /* 코스 지도는 구역 선이 없는 깨끗한 지도를 씀 (있을 때만) */
+    if(!/yuseong_map\.png/.test(info.plan)) return cb();
+    var b = new Image(), u = info.plan.replace('yuseong_map.png', 'yuseong_base.png');
+    b.onload = function(){ plan.base = u; cb(); }; b.onerror = function(){ cb(); }; b.src = u;
+  };
   im.onerror = function(){ plan = null; cb(); };
   im.src = info.plan;
 }
@@ -342,6 +361,43 @@ function moduleCard(l, r){
   return '';
 }
 
+/* ---------- 축제장 한눈에 보기: 전체 지도 + 구역 설명 + 지금 여기 ---------- */
+var MCOL = { '보물':'#F5B83D', '퀴즈':'#9B7BEA', '코스':'#34C38F', '안내':'#64748B' };
+function zonesOf(){ var s = SERVERS[SRV]; return (s && s.zones) || []; }
+function guideCard(here){
+  var sp = (info && info.spots || []).filter(function(s){ return s.x !== '' && s.y !== '' && s.x != null; });
+  if(!plan || sp.length < 2) return '';
+  var H = 100 * plan.h / plan.w, cur = null;
+  sp.forEach(function(s){ if(s.id === here) cur = s; });
+  var zs = zonesOf(), curZone = cur ? zs.filter(function(z){ return z.mods.indexOf(cur.mod) >= 0; })[0] : null;
+  var svg = '<svg viewBox="0 0 100 '+H.toFixed(2)+'" xmlns="http://www.w3.org/2000/svg"><image href="'+esc(plan.src)+'" x="0" y="0" width="100" height="'+H.toFixed(2)+'" preserveAspectRatio="none"/>';
+  sp.forEach(function(s){
+    if(cur && s.id === cur.id) return;
+    var x = +s.x, y = +s.y * H / 100, n = String(s.id).split('-').pop();
+    svg += '<circle cx="'+x+'" cy="'+y+'" r="1.75" fill="'+(MCOL[s.mod]||'#64748B')+'" stroke="#fff" stroke-width=".4"/>';
+    svg += '<text x="'+x+'" y="'+(y+0.62)+'" text-anchor="middle" font-size="1.75" font-weight="800" fill="#fff">'+esc(n)+'</text>';
+  });
+  if(cur){
+    var x = +cur.x, y = +cur.y * H / 100, lab = '지금 여기', w = 12, top = y - 9 < 0;
+    svg += '<circle cx="'+x+'" cy="'+y+'" r="4.2" fill="#3D8BFD" opacity=".2"><animate attributeName="r" values="2.6;5;2.6" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values=".35;.05;.35" dur="1.8s" repeatCount="indefinite"/></circle>';
+    svg += '<circle cx="'+x+'" cy="'+y+'" r="2.4" fill="#3D8BFD" stroke="#fff" stroke-width=".6"/>';
+    var by = top ? y + 3.6 : y - 7.4;
+    svg += '<rect x="'+(x-w/2)+'" y="'+by+'" width="'+w+'" height="3.8" rx="1.9" fill="#1E2329"/><text x="'+x+'" y="'+(by+2.65)+'" text-anchor="middle" font-size="2.2" font-weight="800" fill="#fff">'+lab+'</text>';
+  }
+  svg += '</svg>';
+  var cnt = function(mods){ var o = {}; sp.forEach(function(s){ if(mods.indexOf(s.mod) >= 0) o[s.mod] = (o[s.mod]||0)+1; }); return mods.filter(function(m){ return o[m]; }).map(function(m){ return m+' '+o[m]+'곳'; }).join(' · '); };
+  var used = []; sp.forEach(function(s){ if(used.indexOf(s.mod) < 0) used.push(s.mod); });
+  var openIt = !last || !cur || cur.mod === '안내';
+  var h = '<details class="card guide"'+(openIt ? ' open' : '')+'><summary>🗺️ 축제장 한눈에 보기 <span class="chip">'+(curZone ? '📍 '+esc(curZone.name) : 'QR '+sp.length+'곳')+'</span><span class="tog"></span></summary>';
+  if(cur) h += '<div class="here">📍 지금 여기: '+esc(cur.loc || cur.id)+(curZone ? ' · '+esc(curZone.name) : '')+'</div>';
+  h += '<div class="route" style="margin-top:10px">'+svg+'</div>';
+  h += '<div class="legend">'+['보물','퀴즈','코스','안내'].filter(function(m){ return used.indexOf(m) >= 0; }).map(function(m){ return '<span><i style="background:'+MCOL[m]+'"></i>'+m+'</span>'; }).join('')+'<span>숫자 = QR 번호</span></div>';
+  zs.forEach(function(z){
+    var c = cnt(z.mods); if(!c) return;
+    h += '<div class="zone'+(z === curZone ? ' on' : '')+'" style="--c:'+esc(z.color)+'"><div><b>'+esc(z.name)+'<small>'+esc(z.where || '')+'</small>'+(z === curZone ? '<span class="now">지금 여기</span>' : '')+'</b><p>'+esc(z.desc || '')+'</p><span class="cnt">'+c+'</span></div></div>';
+  });
+  return h + '</details>';
+}
 /* ---------- 코스 루트 지도: 거점을 순서대로 잇고, 찍은 곳은 채움 ---------- */
 function routeSvg(c, here){
   var pts = c.list.filter(function(s){ return s.x != null && s.y != null && s.x !== '' && s.y !== ''; });
@@ -353,7 +409,7 @@ function routeSvg(c, here){
   var w = x1 - x0, h = y1 - y0;
   if(h < w * 0.55){ var add = (w * 0.55 - h) / 2; y0 = Math.max(0, y0 - add); h = Math.min(H - y0, w * 0.55); }   /* 너무 납작하지 않게 */
   var k = w / 60, s = '<svg viewBox="'+x0.toFixed(2)+' '+y0.toFixed(2)+' '+w.toFixed(2)+' '+h.toFixed(2)+'" xmlns="http://www.w3.org/2000/svg">';
-  s += '<image href="'+esc(plan.src)+'" x="0" y="0" width="100" height="'+H.toFixed(2)+'" preserveAspectRatio="none"/>';
+  s += '<image href="'+esc(plan.base || plan.src)+'" x="0" y="0" width="100" height="'+H.toFixed(2)+'" preserveAspectRatio="none"/>';
   var P = pts.map(function(p){ return [+p.x, +p.y * H / 100]; });
   s += '<polyline points="'+P.map(function(p){ return p.join(','); }).join(' ')+'" fill="none" stroke="#3D8BFD" stroke-width="'+(0.9*k).toFixed(2)+'" stroke-dasharray="'+(1.6*k).toFixed(2)+' '+(1.1*k).toFixed(2)+'" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>';
   for(var i = 1; i < pts.length; i++) if(pts[i].got && pts[i-1].got)
@@ -417,7 +473,8 @@ function renderStatus(r){
   h += '<button class="btn scan" id="scanbtn" type="button"><span aria-hidden="true">📷</span> QR 찍기</button>';
   if(KAKAO) h += kakaoBox(kakaoSeen());
   h += '<div class="score"><div><b>'+m.total+'</b><span>내 점수 · '+(m.rank ? m.rank+'위' : '순위 없음')+'</span></div><div><b>'+m.today+'</b><span>오늘 얻은 점수</span></div></div>';
-  /* 3) 코스 지도 */
+  /* 3) 축제장 전체 지도·구역 → 4) 코스 지도 */
+  h += guideCard(last && last.qr);
   h += courseCards(r, last && last.qr);
   /* 4) 플랫폼 메뉴 */
   h += '<div class="menu">';
