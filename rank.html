@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>실시간 순위</title>
+<title>실시간 순위 · 현황</title>
 <style>
 :root{--bg:#F3F5F9;--card:#FFF;--ink:#1E2329;--sub:#6B7480;--muted:#9AA3AF;--line:#E7EAF0;--blue:#3D8BFD;--blue-soft:#EAF2FF;--mint:#34C38F;--mint-soft:#E6F7F0;--yellow:#F5B83D;--yellow-soft:#FFF6E0;--slate-soft:#EEF1F5;--bad:#E5534B;--gold:#F5B83D;--silver:#AEB8C6;--bronze:#D49A6A}
 *{box-sizing:border-box}
@@ -56,6 +56,25 @@ h2{font-size:16px;margin:0 0 2px}
 .row small{color:var(--muted);font-size:12px;margin-left:6px}
 .row em{font-style:normal;font-weight:800;font-variant-numeric:tabular-nums}
 .empty{color:var(--sub);text-align:center;padding:24px 0;font-size:14px}
+.more{display:block;margin:10px auto 0;border:0;background:none;color:var(--blue);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+.sec-t{font-size:18px;margin:22px 2px 10px}
+.flow{display:grid;gap:12px;align-items:start}
+@media(min-width:820px){.flow{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}}
+.chart{display:flex;align-items:flex-end;gap:3px;height:150px;border-bottom:1px solid var(--line);margin-top:6px}
+.chart .h{flex:1;display:flex;align-items:flex-end;gap:1px;height:100%;position:relative}
+.chart i{flex:1;border-radius:3px 3px 0 0;min-height:1px}
+.chart small{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:10px;color:var(--muted)}
+.lg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--sub);margin-top:26px}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.peak{font-size:13px;color:var(--ink);background:var(--blue-soft);border-radius:10px;padding:7px 10px;margin-top:10px}
+.kv{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.kv:first-of-type{border-top:0}
+.kv span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kv b{flex:none;font-variant-numeric:tabular-nums}
+.kv small{color:var(--muted);font-weight:500}
+.mini3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.mini3 div{background:var(--card);border-radius:14px;padding:10px 12px}
+.mini3 b{display:block;font-size:18px;font-variant-numeric:tabular-nums}.mini3 span{font-size:11.5px;color:var(--sub)}
 .foot{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-top:14px;font-size:12.5px;color:var(--sub)}
 .go{display:inline-block;background:var(--ink);color:#fff;text-decoration:none;font-weight:700;border-radius:12px;padding:11px 18px;font-size:14px}
 .err{color:var(--bad);font-weight:700}
@@ -69,7 +88,7 @@ h2{font-size:16px;margin:0 0 2px}
 <body>
 <header class="bar"><div class="brand"><i>Q</i><span id="ttl">QR 참여</span></div><nav><a href="home.html" id="portal">처음</a><a href="./" id="home">내 화면</a></nav></header>
 <main class="wrap">
-  <div class="hero"><h1>실시간 순위</h1><span class="live" id="live"><i></i><span id="stamp">불러오는 중</span></span></div>
+  <div class="hero"><h1>실시간 순위 · 현황</h1><span class="live" id="live"><i></i><span id="stamp">불러오는 중</span></span></div>
   <div class="seg" id="seg"><button data-v="all" class="on">전체 누적</button><button data-v="today">오늘</button></div>
   <div id="app">
     <div class="stats"><div class="stat sk" style="height:62px"></div><div class="stat sk" style="height:62px"></div><div class="stat sk" style="height:62px"></div></div>
@@ -84,7 +103,7 @@ h2{font-size:16px;margin:0 0 2px}
 var SRV = (new URLSearchParams(location.search).get('s') || 'pilot').replace(/[^a-z]/g,'');
 if(!(window.QR_SERVERS||{})[SRV]) SRV = 'pilot';
 var API_URL = window.QR_SERVERS[SRV].url, SQ = '?s=' + SRV;
-var CK = 'qr-rank-cache-' + SRV, app = document.getElementById('app'), view = 'all', last = null, busy = false;
+var showAll = false, CK = 'qr-rank-cache-' + SRV, app = document.getElementById('app'), view = 'all', last = null, busy = false;
 function nf(n){ return Number(n||0).toLocaleString('ko-KR'); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function roundChip(d){
@@ -93,7 +112,7 @@ function roundChip(d){
 }
 function render(d, stale){
   last = d;
-  if(d.title){ document.getElementById('ttl').textContent = d.title; document.title = d.title + ' 실시간 순위'; }
+  if(d.title){ document.getElementById('ttl').textContent = d.title; document.title = d.title + ' 순위 · 현황'; }
   var v = view === 'today' && d.today ? d.today : d, h = '';
   var lead = v.teams[0] && v.teams[0].score > 0 ? v.teams[0].team : '-';
   h += '<div class="stats"><div class="stat"><b>'+v.players+'명</b><span>점수 얻은 사람</span></div><div class="stat"><b>'+v.total+'점</b><span>'+(view==='today'?'오늘':'전체')+' 쌓인 점수</span></div><div class="stat"><b>'+esc(lead)+'</b><span>1위 팀</span></div></div>';
@@ -105,12 +124,44 @@ function render(d, stale){
   if(P.length){
     var pod = function(p, i){ return p ? '<div class="pod p'+(i+1)+'"><span class="m">'+(i+1)+'</span><b>'+esc(p.nick)+'</b><small>'+esc(p.team)+'</small><strong>'+p.hits+'점</strong></div>' : '<div></div>'; };
     h += '<div class="podium">'+pod(P[1],1)+pod(P[0],0)+pod(P[2],2)+'</div>';
-    h += P.slice(3).map(function(p,i){ return '<div class="row"><span class="no">'+(i+4)+'</span><span>'+esc(p.nick)+'<small>'+esc(p.team)+'</small></span><em>'+p.hits+'점</em></div>'; }).join('');
+    var lim = showAll ? P.length : Math.min(P.length, 10);
+    h += P.slice(3, lim).map(function(p,i){ return '<div class="row"><span class="no">'+(i+4)+'</span><span>'+esc(p.nick)+'<small>'+esc(p.team)+'</small></span><em>'+p.hits+'점</em></div>'; }).join('');
+    if(P.length > 10) h += '<button class="more" id="more">'+(showAll ? '10위까지만 보기' : '30위까지 모두 보기 ›')+'</button>';
   } else h += '<p class="empty">'+(view==='today'?'오늘은':'아직')+' 점수를 얻은 사람이 없어요.<br>첫 번째 주인공이 되어보세요.</p>';
   h += '</section></div>';
+  h += statsHtml(d);
   app.innerHTML = h;
+  var mb = document.getElementById('more'); if(mb) mb.onclick = function(){ showAll = !showAll; render(last, false); };
   app.className = stale ? 'stale' : '';
   document.getElementById('stamp').textContent = (stale ? '지난 기록 · 새로 불러오는 중' : '마지막 갱신 '+String(d.stamp||'').slice(11,16));
+}
+/* 참여 현황: 거점 위치·거점별 수치 없이 전체 흐름만 (거점 지도는 운영자 관제에서) */
+function statsHtml(d){
+  var st = d.stats; if(!st || !st.dates || !st.dates.length) return '';
+  var h = '<h2 class="sec-t">참여 현황</h2>';
+  h += '<div class="mini3"><div><b>'+nf(st.scans)+'</b><span>현장 QR 스캔</span></div><div><b>'+nf(st.people)+'</b><span>QR을 찍은 사람</span></div><div><b>'+nf(st.moves)+'</b><span>거점 사이 이동</span></div></div>';
+  var hrs = []; for(var x = st.open; x < st.close; x++) hrs.push(x);
+  var groups;
+  if(view === 'today') groups = st.hours[d.date] ? [{ name: '오늘', dates: [d.date] }] : [];
+  else if(st.dates.length > 4){
+    var wk = st.dates.filter(function(x){ var w = new Date(x+'T00:00:00Z').getUTCDay(); return w === 0 || w === 6; }), wd = st.dates.filter(function(x){ return wk.indexOf(x) < 0; });
+    groups = [{ name:'평일 하루 평균', dates: wd }, { name:'주말 하루 평균', dates: wk }].filter(function(g){ return g.dates.length; });
+  } else groups = st.dates.map(function(x){ return { name: x.slice(5).replace('-', '.'), dates: [x] }; });
+  var gv = function(g, hr){ var t = 0; g.dates.forEach(function(x){ t += ((st.hours[x] || [])[hr] || 0); }); return Math.round(t / g.dates.length); };
+  var mx = 1, peak = null; groups.forEach(function(g){ hrs.forEach(function(hr){ var y = gv(g, hr); if(y > mx){ mx = y; peak = { g: g.name, h: hr, y: y }; } }); });
+  var col = ['#3D8BFD', '#F5B83D', '#34C38F', '#9B7BEA'];
+  h += '<div class="flow"><section class="card"><h2>시간대별 QR 스캔</h2><p class="note">'+(view === 'today' ? '오늘' : (st.dates.length > 4 ? '평일·주말 하루 평균' : '날짜별'))+' · 몇 시에 사람이 많이 참여했는지</p>';
+  if(groups.length){
+    h += '<div class="chart">'+hrs.map(function(hr){ return '<div class="h">'+groups.map(function(g, i){ var y = gv(g, hr); return '<i title="'+esc(g.name)+' '+hr+'시 '+y+'건" style="height:'+(y/mx*100)+'%;background:'+col[i%4]+'"></i>'; }).join('')+'<small>'+hr+'</small></div>'; }).join('')+'</div>';
+    h += '<div class="lg">'+groups.map(function(g, i){ return '<span><i style="background:'+col[i%4]+'"></i>'+esc(g.name)+'</span>'; }).join('')+'</div>';
+    if(peak) h += '<div class="peak">⏰ 가장 붐빈 때: '+esc(peak.g)+' '+peak.h+'시대 (약 '+nf(peak.y)+'건)</div>';
+  } else h += '<p class="empty">오늘은 아직 기록이 없어요.</p>';
+  h += '</section>';
+  var m = '';
+  (st.course || []).forEach(function(c){ m += '<div class="kv"><span>🗺️ '+esc(c.name)+' 완주율</span><b>'+(c.starters ? Math.round(c.done/c.starters*100)+'% <small>('+nf(c.done)+'/'+nf(c.starters)+'명)</small>' : '-')+'</b></div>'; });
+  (st.quiz || []).forEach(function(z){ var n = z.ok + z.ng; m += '<div class="kv"><span>❓ '+esc(z.q)+'</span><b>'+(n ? Math.round(z.ok/n*100)+'% <small>정답</small>' : '-')+'</b></div>'; });
+  h += '<section class="card"><h2>프로그램 참여 결과</h2><p class="note">'+(view === 'today' ? '전체 기간 기준' : '코스 완주율 · 퀴즈 정답률')+'</p>'+(m || '<p class="empty">퀴즈·코스 기록이 없어요.</p>')+'</section></div>';
+  return h;
 }
 function load(){
   if(busy) return; busy = true;

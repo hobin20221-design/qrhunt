@@ -69,6 +69,9 @@ input{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px 12
 /* 코스 지도 */
 .route{border-radius:14px;overflow:hidden;background:#FAFBFD;margin:8px 0 10px;border:1px solid var(--line)}
 .route svg{display:block;width:100%;height:auto}
+.result.wait{background:var(--card)}
+.spin{display:block;width:34px;height:34px;margin:4px auto 8px;border-radius:50%;border:4px solid var(--blue-soft);border-top-color:var(--blue);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 details.guide>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:800;font-size:16px}
 details.guide>summary::-webkit-details-marker{display:none}
 details.guide>summary .tog{margin-left:auto;font-size:12px;font-weight:600;color:var(--blue)}
@@ -203,15 +206,27 @@ function loadPlan(cb){
   im.onerror = function(){ plan = null; cb(); };
   im.src = info.plan;
 }
+/* 속도: 지난번에 받은 행사 정보(제목·거점 목록)를 먼저 쓰고, 스캔 요청을 바로 보냄.
+   행사 정보와 지도 그림은 뒤에서 동시에 새로 받아 둠 (예전엔 순서대로 기다려서 느렸음) */
+var IK = 'qr-info-' + SRV, lastR = null;
+function applyInfo(i){
+  info = i; team = team || i.teams[0];
+  if(i.title){ document.title = i.title; document.getElementById('ttl').textContent = i.title; }
+}
 function start(){
+  var cached = null, t = getTok(), went = false;
+  try{ cached = JSON.parse(localStorage.getItem(IK) || 'null'); }catch(e){}
+  var go = function(){
+    if(went) return; went = true;
+    loadPlan(function(){ if(lastR && plan) renderStatus(lastR); });
+    if(!getTok()) return renderAuth();
+    if(QR) doScan(QR); else refresh();
+  };
+  if(cached && t){ applyInfo(cached); go(); }
   call('getInfo', [QR], function(i){
-    info = i; team = i.teams[0];
-    if(i.title){ document.title = i.title; document.getElementById('ttl').textContent = i.title; }
-    loadPlan(function(){
-      var t = getTok();
-      if(!t) return renderAuth();
-      if(QR) doScan(QR); else refresh();
-    });
+    var spot = i.spot; applyInfo(i);
+    try{ var keep = Object.assign({}, i); delete keep.spot; localStorage.setItem(IK, JSON.stringify(keep)); }catch(e){}
+    info.spot = spot; go();
   });
 }
 function refresh(){
@@ -221,9 +236,15 @@ function refresh(){
     renderStatus(r);
   });
 }
+function pendingSpot(q){
+  var s = null; ((info && info.spots) || []).forEach(function(x){ if(x.id === q) s = x; });
+  if(!s && info && info.spot && info.spot.id === q) s = info.spot;
+  return s ? { id: s.id, loc: s.loc || s.id, mod: s.mod, course: s.course, what: '찍은 QR을 확인하고 있어요…' } : { id: q, loc: q, mod: '', what: '찍은 QR을 확인하고 있어요…' };
+}
 function doScan(q, retry){
   QR = '';
-  app.innerHTML = '<div class="load">'+esc(q)+' 확인 중이에요'+(retry ? '<br><span class="hint">응답이 늦어 한 번 더 확인하고 있어요</span>' : '<br><span class="hint">사람이 많으면 몇 초 걸릴 수 있어요</span>')+'</div>';
+  /* 결과를 기다리는 동안에도 어디를 찍었는지 바로 보여 줌 */
+  app.innerHTML = spotCard(pendingSpot(q), '📍 지금 찍은 QR') + '<div class="result wait"><span class="spin"></span><b>확인 중이에요</b><p>'+(retry ? '응답이 늦어 한 번 더 확인하고 있어요' : '보통 2~4초 걸려요')+'</p></div>';
   call('scan',[getTok(),q],function(r){
     if(r && !r.error){
       var res = r.result;
@@ -397,7 +418,9 @@ function guideCard(here){
   h += '<div class="route" style="margin-top:10px">'+svg+'</div>';
   h += '<div class="legend">'+['보물','퀴즈','코스','안내'].filter(function(m){ return used.indexOf(m) >= 0; }).map(function(m){ return '<span><i style="background:'+MCOL[m]+'"></i>'+m+'</span>'; }).join('')+'<span>숫자 = QR 번호</span></div>';
   zs.forEach(function(z){
-    var c = cnt(z.mods); if(!c) return;
+    var c = cnt(z.mods);
+    if(z.mods.indexOf('보물') >= 0 && info && info.mods && info.mods.indexOf('보물') >= 0) c = (c ? c + ' · ' : '') + '보물 위치는 비밀 🤫';
+    if(!c) return;
     h += '<div class="zone'+(z === curZone ? ' on' : '')+'" style="--c:'+esc(z.color)+'"><div><b>'+esc(z.name)+'<small>'+esc(z.where || '')+'</small>'+(z === curZone ? '<span class="now">지금 여기</span>' : '')+'</b><p>'+esc(z.desc || '')+'</p><span class="cnt">'+c+'</span></div></div>';
   });
   return h + '</details>';
@@ -461,6 +484,7 @@ function roundLine(r){
   return x.next ? '다음 시작 '+x.next : '운영 종료';
 }
 function renderStatus(r){
+  lastR = r;
   var m = r.me, h = '';
   h += '<div class="hello"><div><b>'+esc(m.nick)+'</b><span class="chip">'+esc(m.team)+'</span></div><span class="hint">'+esc(hasMod('보물') ? roundLine(r) : '')+'</span></div>';
   /* 1) 지금 찍은 QR → 2) 그 QR에서 일어난 일 */
@@ -484,7 +508,6 @@ function renderStatus(r){
   h += '<div class="menu">';
   if(info && info.hasContest && SRV !== 'pilot') h += '<a href="contest.html'+SQ+'"><i>📸</i><b>자랑대회</b><span>사진 올리고 투표하기</span></a>';
   h += '<a href="rank.html'+SQ+'"><i>🏆</i><b>전체 순위</b><span>팀 대항전 · 개인</span></a>';
-  h += '<a href="status.html'+SQ+'"><i>🗺️</i><b>공개 현황</b><span>어디에 사람이 많을까</span></a>';
   h += SRV === 'pilot' ? '<a href="home.html"><i>🏠</i><b>처음 화면</b><span>시범운영 · 축제 시뮬레이션</span></a>'
     : '<a href="portal.html'+SQ+'"><i>🧭</i><b>플랫폼 소개</b><span>QR로 할 수 있는 것</span></a>';
   h += '</div>';

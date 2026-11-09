@@ -51,7 +51,7 @@ footer a{color:var(--sub)}
   </section>
   <div class="two" id="two"></div>
   <footer>
-    운영자 관제(관리자 코드 필요): <a id="ad-pilot" target="_blank" rel="noopener">시범운영</a> · <a id="ad-fest" target="_blank" rel="noopener">축제 시뮬레이션</a><br>
+    거점 위치·거점별 이용 지도는 운영자 관제에서만 볼 수 있어요.<br>운영자 관제(관리자 코드 필요): <a id="ad-pilot" target="_blank" rel="noopener">시범운영</a> · <a id="ad-fest" target="_blank" rel="noopener">축제 시뮬레이션</a><br>
     기본 지도: 제17회 유성국화축제 안내도(유성구) 재구성 · 축제 거점은 기능 시연용 예시 배치
   </footer>
 </div>
@@ -69,8 +69,7 @@ var Q = function(k){ return '?s=' + k; };
 var MC = { '안내':'#64748B', '보물':'#F5B83D', '퀴즈':'#9B7BEA', '코스':'#34C38F' };
 var pilot = box('pilot', {
   head: '<p class="desc">복도 곳곳에 붙인 QR로 회차마다 바뀌는 보물을 찾은 실제 운영이에요. 참가자·스캔 기록은 모두 실제 데이터예요.</p>',
-  body: '<a class="btn main" href="rank.html'+Q('pilot')+'"><i>🏆</i><div><b>최종 순위</b><span>팀 대항전 · 개인 순위</span></div></a>'+
-        '<a class="btn" href="status.html'+Q('pilot')+'"><i>🗺️</i><div><b>공개 현황</b><span>S8동 도면 위 거점별 스캔 · 이동</span></div></a>'+
+  body: '<a class="btn main" href="rank.html'+Q('pilot')+'"><i>🏆</i><div><b>최종 순위 · 현황</b><span>팀 대항전 · 개인 순위 · 시간대별 참여</span></div></a>'+
         '<a class="btn" href="./'+Q('pilot')+'"><i>📷</i><div><b>참가자 화면</b><span>내 기록 보기 · 로그인</span></div></a>'
 });
 var tries = [['Y-01','안내','중앙 허브'],['Y-02','안내','주차장 입구'],['Y-09','보물','보물'],['Y-13','퀴즈','퀴즈'],['Y-18','코스','데이트 코스'],['Y-08','안내','밤티 인증']];
@@ -80,8 +79,7 @@ var fest = box('fest', {
         '<a class="btn main" href="portal.html'+Q('fest')+'"><i>🧭</i><div><b>플랫폼 소개</b><span>QR 하나로 할 수 있는 것 · 구역 안내</span></div></a>'+
         '<div class="try"><p>📷 QR을 찍었다고 치고 체험해 보기</p><div class="chips">'+tries.map(function(t){ return '<a href="./?s=fest&qr='+t[0]+'"><em style="background:'+MC[t[1]]+'"></em>'+t[0]+' '+esc(t[2])+'</a>'; }).join('')+'</div></div>'+
         '<a class="btn" href="contest.html'+Q('fest')+'"><i>📸</i><div><b>자랑대회</b><span>밤티 자랑대회 · 국화 데이트 사진</span></div></a>'+
-        '<a class="btn" href="rank.html'+Q('fest')+'"><i>🏆</i><div><b>실시간 순위</b><span>대학 대항전 · 개인 · 오늘</span></div></a>'+
-        '<a class="btn" href="status.html'+Q('fest')+'"><i>🗺️</i><div><b>공개 현황</b><span>축제장 지도 위 거점별 이용 · 동선</span></div></a>'
+        '<a class="btn" href="rank.html'+Q('fest')+'"><i>🏆</i><div><b>실시간 순위 · 현황</b><span>대학 대항전 · 개인 · 시간대별 참여</span></div></a>'
 });
 document.getElementById('two').innerHTML = pilot + fest;
 ['pilot','fest'].forEach(function(k){
