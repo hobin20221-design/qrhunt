@@ -13,6 +13,28 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,"Appl
 .bar b{font-size:16px}
 .me{font-size:13px;color:var(--sub)}
 .wrap{max-width:760px;margin:0 auto;padding:16px 16px calc(48px + env(safe-area-inset-bottom))}
+.jump{position:sticky;top:calc(53px + env(safe-area-inset-top));z-index:4;display:flex;gap:6px;align-items:center;background:var(--bg);padding:8px 0 10px;margin-bottom:4px}
+.jump a{flex:none;text-decoration:none;background:#E9EDF3;color:#4B5563;border-radius:999px;padding:7px 14px;font-size:13.5px;font-weight:700}
+.jump a.main{background:var(--ink);color:#fff}
+.jump .sort{margin-left:auto;flex:none;white-space:nowrap}
+.jump{overflow-x:auto}
+.sec{margin-bottom:22px}
+.tag{display:inline-block;font-size:11.5px;font-weight:800;border-radius:999px;padding:2px 9px;margin-bottom:6px;background:var(--pink);color:#fff}
+.tag.sub{background:#EEF1F5;color:var(--sub)}
+.appendix .card{background:#FBFBFD;border:1px dashed #D6DCE5}
+.appendix h1{font-size:18px}
+.mini{font-size:12.5px;color:var(--sub);background:#F3F5F9;border-radius:12px;padding:8px 11px;margin-top:10px;line-height:1.55}
+.mini.ok{background:#E6F7F0;color:#1E6B4C}.mini.todo{background:var(--yellow-soft);color:#8A5A00}
+.strip{display:grid;grid-auto-flow:column;grid-auto-columns:150px;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+.strip .ph{scroll-snap-align:start}
+.more{display:block;margin:8px auto 0;border:0;background:none;color:var(--blue);font:inherit;font-size:13.5px;font-weight:700}
+@media(min-width:960px){
+  .wrap{max-width:1180px}
+  .cols{display:grid;grid-template-columns:3fr 2fr;gap:20px;align-items:start}
+  .cols .appendix .strip{grid-auto-flow:row;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));grid-auto-columns:auto;overflow:visible}
+  .cols .appendix .more{display:none}
+  .jump{top:calc(53px + env(safe-area-inset-top))}
+}
 .tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px}
 .tabs button{flex:none;border:0;background:#E9EDF3;color:#4B5563;border-radius:999px;padding:8px 16px;font:inherit;font-size:14px;font-weight:700}
 .tabs button.on{background:var(--ink);color:#fff}
@@ -55,7 +77,7 @@ h1{font-size:22px;margin:0 0 4px}
 .steps div.todo{background:var(--yellow-soft)}
 .places{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .places span{background:#fff;border-radius:999px;padding:1px 8px;font-size:11.5px;color:var(--ink)}
-@media(max-width:420px){.steps{grid-template-columns:1fr}}
+@media(max-width:420px){.steps{grid-template-columns:1fr;gap:6px}.steps>div{display:grid;grid-template-columns:22px 1fr;column-gap:10px;padding:9px 11px}.steps>div em{grid-row:span 3}.steps>div b{margin:0}.steps>div .places{grid-column:2}.jump a{padding:7px 11px;font-size:13px}}
 /* 사진 카드 상태 */
 .badge{position:absolute;right:8px;bottom:8px;font-size:12px;font-weight:800;border-radius:999px;padding:2px 9px;background:var(--pink);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.15)}
 .badge.own{background:rgba(30,35,41,.8)}
@@ -124,52 +146,85 @@ function post(fn, args, ok, fail){
     .then(function(r){ return r.json(); }).then(ok).catch(fail);
 }
 
+var ORDER = ['bamti', 'date'];   /* 먼저 보여 줄 대회 (첫 번째가 메인, 나머지는 부록) */
+var GS = {}, open2 = {};
+function ordered(list){
+  return list.slice().sort(function(a, b){
+    var x = ORDER.indexOf(a.id), y = ORDER.indexOf(b.id);
+    return (x < 0 ? 99 : x) - (y < 0 ? 99 : y);
+  });
+}
 function start(){
   if(String(API).indexOf('여기에') >= 0){ app.innerHTML = '<div class="card">config.js에 '+esc(S[SRV].name)+' 서버 주소가 아직 없어요.</div>'; return; }
   call('contests', [tok()], function(r){
-    L = r;
+    L = r; L.list = ordered(r.list || []);
     if(!r.me && tok()) setTok(null);
     document.getElementById('me').innerHTML = r.me ? esc(r.me.nick) + ' · <a href="#" id="out" style="font-size:13px">로그아웃</a>' : '<a href="#" id="login" style="font-size:13px;color:var(--blue);font-weight:700">로그인</a>';
     var o = document.getElementById('out'), li = document.getElementById('login');
     if(o) o.onclick = function(e){ e.preventDefault(); setTok(null); start(); };
     if(li) li.onclick = function(e){ e.preventDefault(); openAuth(); };
-    if(!r.list.length){ app.innerHTML = '<div class="empty">진행 중인 대회가 없어요.</div>'; return; }
-    if(!r.list.some(function(c){ return c.id === cur; })) cur = r.list[0].id;
-    loadGallery();
+    if(!L.list.length){ app.innerHTML = '<div class="empty">진행 중인 대회가 없어요.</div>'; return; }
+    loadAll();
   });
 }
-function loadGallery(){
-  call('gallery', [cur, tok(), sort], function(g){ G = g; render(); });
+/* 모든 대회 사진을 한 번에 불러와 한 화면에 보여 줌 */
+function loadAll(){
+  var left = L.list.length;
+  L.list.forEach(function(c){
+    call('gallery', [c.id, tok(), sort], function(g){ GS[c.id] = g; if(--left === 0) render(); },
+      function(){ GS[c.id] = { photos: [] }; if(--left === 0) render(); });
+  });
 }
-function C(){ return L.list.filter(function(c){ return c.id === cur; })[0]; }
-function render(){
-  var c = C(), h = '';
-  h += '<div class="tabs">'+L.list.map(function(x){ return '<button data-c="'+esc(x.id)+'" class="'+(x.id===cur?'on':'')+'">'+esc(x.name)+' <span style="opacity:.6">'+x.count+'</span></button>'; }).join('')+'</div>';
-  h += '<div class="card"><h1>'+esc(c.name)+(c.state!=='진행'?' <span class="st 대기">'+esc(c.state)+'</span>':'')+'</h1><p class="desc">'+esc(c.desc)+'</p>';
-  /* 참여 방법 3단계 + 내 진행 상태 */
+function C(id){ return L.list.filter(function(c){ return c.id === (id || cur); })[0]; }
+function photoCard(p, i){
+  return '<div class="ph" data-p="'+esc(p.id)+'" data-cid="'+esc(p.cid || '')+'"><div style="position:relative">'+(sort==='top' && i<3 && p.votes ? '<span class="rank">'+(i+1)+'위</span>' : '')+
+    (p.voted ? '<span class="badge">✓ 투표 완료</span>' : p.own ? '<span class="badge own">내 사진</span>' : '')+
+    '<div class="img" style="background-image:url(\''+esc(p.img)+'\')" role="img" aria-label="'+esc(p.title)+'"></div></div>'+
+    '<div class="t"><b>'+esc(p.title)+'</b><small>'+esc(p.nick)+(p.team && p.team!=='기타' ? ' · '+esc(p.team) : '')+'</small>'+
+    '<div class="v"><small>'+(p.voted ? '투표했어요' : '')+'</small><button class="'+(p.voted?'on':'')+'" tabindex="-1">♥ '+p.votes+'</button></div></div></div>';
+}
+function section(c, main){
+  var g = GS[c.id] || { photos: [] }, ph = g.photos.map(function(p){ p.cid = c.id; return p; });
+  var h = '<section class="sec '+(main ? 'primary' : 'appendix')+'" id="c-'+esc(c.id)+'"><div class="card">';
+  h += '<span class="tag'+(main ? '' : ' sub')+'">'+(main ? '메인 대회' : '부록')+'</span>';
+  h += '<h1>'+esc(c.name)+' <span style="color:var(--muted);font-size:.75em">'+c.count+'</span>'+(c.state!=='진행'?' <span class="st 대기">'+esc(c.state)+'</span>':'')+'</h1><p class="desc">'+esc(c.desc)+'</p>';
   var s1 = !c.authNames.length ? 'ok' : (L.me ? (c.canUpload ? 'ok' : 'todo') : ''), s2 = L.me && c.myUploads ? 'ok' : '', s3 = L.me && c.votesLeft < c.maxVote ? 'ok' : '';
-  h += '<div class="steps">'+
-    '<div class="'+s1+'"><em>'+(s1==='ok'?'✓':'1')+'</em><b>현장 QR 찍기</b>'+(c.authNames.length ? '아래 중 한 곳 QR을 찍으면 인증돼요'+(L.me ? (c.canUpload ? ' · 인증 완료' : ' · 아직 안 찍었어요') : '')+'<div class="places">'+c.authNames.map(function(n){ return '<span>📍 '+esc(n)+'</span>'; }).join('')+'</div>' : 'QR 인증 없이 누구나 올릴 수 있어요')+'</div>'+
-    '<div class="'+s2+'"><em>'+(s2?'✓':'2')+'</em><b>사진 올리기</b>1인 '+c.maxUp+'장까지'+(L.me ? ' · '+c.myUploads+'장 올림' : '')+'. 운영자가 확인한 뒤 공개돼요</div>'+
-    '<div class="'+s3+'"><em>'+(s3?'✓':'3')+'</em><b>투표하기</b>사진을 눌러 투표. 하루 '+c.maxVote+'표'+(L.me ? ' · 오늘 '+c.votesLeft+'표 남음' : '')+'</div></div>';
-  h += '<div class="acts"><button class="btn" id="up"'+(c.state!=='진행'?' disabled':'')+'>📸 사진 올리기</button>'+
-    (L.me ? '<span class="left">남은 투표 <b>'+c.votesLeft+'</b>/'+c.maxVote+'</span>' : '<span class="left">로그인하면 투표할 수 있어요</span>')+
-    '<span class="sort"><button data-o="top" class="'+(sort==='top'?'on':'')+'">인기순</button><button data-o="new" class="'+(sort==='new'?'on':'')+'">최신순</button></span></div></div>';
-  if(G.photos.length){
-    h += '<div class="grid">'+G.photos.map(function(p,i){
-      return '<div class="ph" data-p="'+esc(p.id)+'"><div style="position:relative">'+(sort==='top' && i<3 && p.votes ? '<span class="rank">'+(i+1)+'위</span>' : '')+
-        (p.voted ? '<span class="badge">✓ 투표 완료</span>' : p.own ? '<span class="badge own">내 사진</span>' : '')+
-        '<div class="img" style="background-image:url(\''+esc(p.img)+'\')" role="img" aria-label="'+esc(p.title)+'"></div></div>'+
-        '<div class="t"><b>'+esc(p.title)+'</b><small>'+esc(p.nick)+(p.team && p.team!=='기타' ? ' · '+esc(p.team) : '')+'</small>'+
-        '<div class="v"><small>'+(p.voted ? '투표했어요' : '')+'</small><button class="'+(p.voted?'on':'')+'" tabindex="-1">♥ '+p.votes+'</button></div></div></div>';
-    }).join('')+'</div>';
-  } else h += '<div class="empty">아직 공개된 사진이 없어요.<br>첫 번째로 자랑해 보세요!</div>';
-  if(L.me) h += '<div class="card mine" id="mine" style="margin-top:12px"><b>내가 올린 사진</b><div id="minelist" class="left" style="margin-top:6px">불러오는 중…</div></div>';
+  if(main){
+    h += '<div class="steps">'+
+      '<div class="'+s1+'"><em>'+(s1==='ok'?'✓':'1')+'</em><b>현장 QR 찍기</b>'+(c.authNames.length ? '아래 중 한 곳 QR을 찍으면 인증돼요'+(L.me ? (c.canUpload ? ' · 인증 완료' : ' · 아직 안 찍었어요') : '')+'<div class="places">'+c.authNames.map(function(n){ return '<span>📍 '+esc(n)+'</span>'; }).join('')+'</div>' : 'QR 인증 없이 누구나 올릴 수 있어요')+'</div>'+
+      '<div class="'+s2+'"><em>'+(s2?'✓':'2')+'</em><b>사진 올리기</b>1인 '+c.maxUp+'장까지'+(L.me ? ' · '+c.myUploads+'장 올림' : '')+'. 운영자가 확인한 뒤 공개돼요</div>'+
+      '<div class="'+s3+'"><em>'+(s3?'✓':'3')+'</em><b>투표하기</b>사진을 눌러 투표. 하루 '+c.maxVote+'표'+(L.me ? ' · 오늘 '+c.votesLeft+'표 남음' : '')+'</div></div>';
+  } else {
+    var where = c.authNames.length ? (c.authNames.length > 3 ? esc(c.authNames.slice(0,3).join(', '))+' 외 '+(c.authNames.length-3)+'곳' : esc(c.authNames.join(', '))) : '';
+    h += '<div class="mini '+(s1 === 'ok' ? 'ok' : s1)+'">'+(where ? '📍 인증 QR: '+where+(L.me ? (c.canUpload ? ' · 인증 완료' : ' · 아직 안 찍었어요') : '')+'<br>' : '')+
+      '1인 '+c.maxUp+'장 · 하루 '+c.maxVote+'표'+(L.me ? ' · 오늘 '+c.votesLeft+'표 남음 · '+c.myUploads+'장 올림' : '')+'</div>';
+  }
+  h += '<div class="acts"><button class="btn" data-up="'+esc(c.id)+'"'+(c.state!=='진행'?' disabled':'')+'>📸 '+(main ? '사진 올리기' : '여기에 올리기')+'</button>'+
+    (L.me ? '<span class="left">남은 투표 <b>'+c.votesLeft+'</b>/'+c.maxVote+'</span>' : '<span class="left">로그인하면 투표할 수 있어요</span>')+'</div></div>';
+  if(!ph.length) h += '<div class="empty">아직 공개된 사진이 없어요.<br>첫 번째로 자랑해 보세요!</div>';
+  else if(main) h += '<div class="grid">'+ph.map(photoCard).join('')+'</div>';
+  else {
+    var all = open2[c.id];
+    h += '<div class="'+(all ? 'grid' : 'strip')+'">'+ph.map(photoCard).join('')+'</div>';
+    if(ph.length > 2) h += '<button class="more" data-more="'+esc(c.id)+'">'+(all ? '한 줄로 접기' : '사진 '+ph.length+'장 모두 보기 ›')+'</button>';
+  }
+  return h + '</section>';
+}
+function render(){
+  var h = '', main = L.list[0], rest = L.list.slice(1);
+  h += '<div class="jump">'+L.list.map(function(c, i){ return '<a href="#c-'+esc(c.id)+'" class="'+(i===0?'main':'')+'">'+(i===0?'🏆 ':'📎 ')+esc(c.name)+'</a>'; }).join('')+
+    '<span class="sort"><button data-o="top" class="'+(sort==='top'?'on':'')+'">인기순</button><button data-o="new" class="'+(sort==='new'?'on':'')+'">최신순</button></span></div>';
+  h += '<div class="cols"><div>'+section(main, true)+'</div>'+(rest.length ? '<div>'+rest.map(function(c){ return section(c, false); }).join('')+'</div>' : '')+'</div>';
+  if(L.me) h += '<div class="card mine" id="mine"><b>내가 올린 사진</b><div id="minelist" class="left" style="margin-top:6px">불러오는 중…</div></div>';
   app.innerHTML = h;
-  [].forEach.call(app.querySelectorAll('[data-c]'), function(b){ b.onclick = function(){ cur = b.getAttribute('data-c'); app.innerHTML = '<div class="load">불러오는 중이에요</div>'; loadGallery(); }; });
-  [].forEach.call(app.querySelectorAll('[data-o]'), function(b){ b.onclick = function(){ sort = b.getAttribute('data-o'); loadGallery(); }; });
-  [].forEach.call(app.querySelectorAll('[data-p]'), function(b){ b.onclick = function(){ openView(b.getAttribute('data-p')); }; });
-  document.getElementById('up').onclick = function(){ if(!L.me) return openAuth(true); if(!c.canUpload) return toast('먼저 인증 QR을 찍어 주세요.'); openUpload(); };
+  [].forEach.call(app.querySelectorAll('[data-o]'), function(b){ b.onclick = function(){ sort = b.getAttribute('data-o'); loadAll(); }; });
+  [].forEach.call(app.querySelectorAll('[data-p]'), function(b){ b.onclick = function(){ cur = b.getAttribute('data-cid'); openView(b.getAttribute('data-p')); }; });
+  [].forEach.call(app.querySelectorAll('[data-more]'), function(b){ b.onclick = function(){ var id = b.getAttribute('data-more'); open2[id] = !open2[id]; render(); }; });
+  [].forEach.call(app.querySelectorAll('[data-up]'), function(b){ b.onclick = function(){
+    cur = b.getAttribute('data-up'); var c = C();
+    if(!L.me) return openAuth(true); if(!c.canUpload) return toast('먼저 인증 QR을 찍어 주세요.'); openUpload(); }; });
+  var want = new URLSearchParams(location.search).get('c');
+  if(want && !render._jumped){ render._jumped = true; var el = document.getElementById('c-'+want); if(el) setTimeout(function(){ el.scrollIntoView(); }, 50); }
   if(L.me) call('myPhotos', [tok()], function(r){
     var el = document.getElementById('minelist'); if(!el) return;
     var names = {}; L.list.forEach(function(x){ names[x.id] = x.name; });
@@ -177,7 +232,7 @@ function render(){
   });
 }
 function openView(pid, asking){
-  var p = G.photos.filter(function(x){ return x.id === pid; })[0], c = C(); if(!p) return;
+  var c = C(), p = ((GS[cur] || {}).photos || []).filter(function(x){ return x.id === pid; })[0]; if(!p) return;
   var act;
   if(!L.me) act = '<button class="vbtn" id="va">로그인하고 투표하기</button>';
   else if(p.own) act = '<button class="vbtn gray" disabled>내 사진에는 투표할 수 없어요</button>';
