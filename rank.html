@@ -160,6 +160,7 @@ function statsHtml(d){
   var m = '';
   (st.course || []).forEach(function(c){ m += '<div class="kv"><span>🗺️ '+esc(c.name)+' 완주율</span><b>'+(c.starters ? Math.round(c.done/c.starters*100)+'% <small>('+nf(c.done)+'/'+nf(c.starters)+'명)</small>' : '-')+'</b></div>'; });
   (st.quiz || []).forEach(function(z){ var n = z.ok + z.ng; m += '<div class="kv"><span>❓ '+esc(z.q)+'</span><b>'+(n ? Math.round(z.ok/n*100)+'% <small>정답</small>' : '-')+'</b></div>'; });
+  if(!m) return h.replace('<div class="flow">', '<div class="flow" style="grid-template-columns:1fr">') + '</div>';
   h += '<section class="card"><h2>프로그램 참여 결과</h2><p class="note">'+(view === 'today' ? '전체 기간 기준' : '코스 완주율 · 퀴즈 정답률')+'</p>'+(m || '<p class="empty">퀴즈·코스 기록이 없어요.</p>')+'</section></div>';
   return h;
 }

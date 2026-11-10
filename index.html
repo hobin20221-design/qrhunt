@@ -506,6 +506,7 @@ function renderStatus(r){
   h += courseCards(r, last && last.qr);
   /* 4) 플랫폼 메뉴 */
   h += '<div class="menu">';
+  if(SRV !== 'pilot') h += '<a href="passport.html'+SQ+'"><i>📒</i><b>내 국화 여권</b><span>도장 · 보상함 · 주차</span></a>';
   if(info && info.hasContest && SRV !== 'pilot') h += '<a href="contest.html'+SQ+'"><i>📸</i><b>자랑대회</b><span>사진 올리고 투표하기</span></a>';
   h += '<a href="rank.html'+SQ+'"><i>🏆</i><b>전체 순위</b><span>팀 대항전 · 개인</span></a>';
   h += SRV === 'pilot' ? '<a href="home.html"><i>🏠</i><b>처음 화면</b><span>시범운영 · 축제 시뮬레이션</span></a>'

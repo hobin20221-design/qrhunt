@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBEFD2">
+<title>유성 국화 여권</title>
+<style>
+:root{--char:#2B2722;--brown:#8A5A12;--mustard:#EAB33F;--cream:#FBEFD2;--bg:#F8F4EA;--sub:#736A5C;--line:#E8E0CE;--card:#FFFDF8;--free:#5E8C61;--full:#B4533A}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--char);font-family:"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.5;letter-spacing:-.01em}
+a{color:inherit}
+.wrap{max-width:460px;margin:0 auto;padding:18px 18px 28px}
+/* ---------- 표지 ---------- */
+#cover{min-height:100vh;background:var(--cream);display:flex;flex-direction:column;align-items:center;gap:20px;padding:calc(30px + env(safe-area-inset-top)) 26px calc(30px + env(safe-area-inset-bottom));text-align:center}
+#cover .k{font-size:13px;letter-spacing:.06em;color:#B98418;font-weight:800}
+#cover .k2{font-size:13px;color:var(--char);margin-top:2px}
+.book{width:min(300px,78vw);aspect-ratio:300/440;border-radius:14px 22px 22px 14px;padding:14px;background:var(--char);box-shadow:0 18px 36px rgba(0,0,0,.4),inset 6px 0 0 rgba(0,0,0,.18);transition:transform .5s cubic-bezier(.3,.7,.3,1)}
+.book .fr{height:100%;border:1.5px solid var(--mustard);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:24px 14px 20px}
+.book .yd{font-size:11px;letter-spacing:.3em;color:var(--sub);font-weight:700;font-style:italic}
+.emb{width:46%;aspect-ratio:1;border-radius:50%;background:var(--cream);border:2px solid var(--mustard);display:grid;place-items:center;box-shadow:0 0 0 6px rgba(234,179,63,.18)}
+.emb svg{width:67%;height:auto}
+.book h1{margin:0;color:var(--cream);font-size:clamp(26px,8vw,34px);font-weight:900;letter-spacing:-.02em}
+.book .en{font-size:10.5px;letter-spacing:.24em;color:var(--cream);margin-top:6px;font-weight:600}
+.book .rule{font-size:12px;color:var(--cream);display:flex;align-items:center;gap:6px;opacity:.9}
+.open{width:100%;max-width:340px;border:0;border-radius:18px;background:var(--mustard);color:var(--char);font:inherit;font-size:17px;font-weight:800;padding:16px;cursor:pointer;margin-top:auto}
+.priv{font-size:12px;color:var(--sub);line-height:1.6}
+.book.opening{transform:perspective(900px) rotateY(-70deg) translateX(-30px)}
+/* ---------- 내 여권 ---------- */
+.no{font-size:12px;color:var(--sub)}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.top h2{margin:0;font-size:24px;font-weight:900;letter-spacing:-.02em}
+.who{font-size:12px;font-weight:800;color:var(--brown);background:var(--cream);border-radius:999px;padding:4px 10px;white-space:nowrap;max-width:55%;overflow:hidden;text-overflow:ellipsis}
+.demo{font-size:11.5px;color:var(--brown);background:#fff;border:1px dashed var(--mustard);border-radius:10px;padding:7px 10px;margin-top:10px}
+.prog{background:var(--char);color:var(--cream);border-radius:18px;padding:16px;margin-top:14px}
+.prog .row{display:flex;justify-content:space-between;align-items:baseline}
+.prog .row span{font-size:13px;color:#D8CDB6}
+.prog .row b{font-size:30px;color:var(--mustard);font-weight:900}.prog .row b small{font-size:14px;color:#D8CDB6;font-weight:600}
+.track{height:7px;background:#4A443B;border-radius:999px;margin:10px 0 12px;overflow:hidden}.track i{display:block;height:100%;background:var(--mustard);border-radius:999px;transition:width .6s}
+.ms{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.ms div{border-radius:10px;padding:7px 8px;background:#3A352E;font-size:12px;line-height:1.35;color:#D8CDB6}
+.ms div b{display:block;color:var(--cream);font-size:12.5px}
+.ms div.on{background:var(--brown)}.ms div.on b{color:#fff}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 6px}
+.seg button{border:1.5px solid var(--brown);background:#fff;color:var(--brown);border-radius:14px;padding:12px 6px;font:inherit;font-size:15px;font-weight:800;cursor:pointer}
+.seg button.on{background:var(--brown);color:#fff}
+.segd{font-size:12.5px;color:var(--sub);margin:0 2px 10px}
+.stamps{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 10px 10px;display:grid;grid-template-columns:repeat(5,1fr);gap:12px 4px}
+.sp{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+.sp .c{width:54px;height:54px;border-radius:50%;border:2px dashed #CDBFA4;display:grid;place-items:center;color:#B3A68E;font-weight:800;font-size:15px}
+.sp .c.got{border:2px solid var(--brown);background:var(--cream);color:var(--brown);transform:rotate(-8deg);flex-direction:column;line-height:1.05}
+.sp .c.got small{font-size:9.5px;font-weight:800}.sp .c.got b{font-size:14px;font-weight:900}
+.sp .c.new{animation:stamp .6s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes stamp{0%{transform:scale(1.7) rotate(-8deg);opacity:0}100%{transform:scale(1) rotate(-8deg);opacity:1}}
+.sp em{font-style:normal;font-size:10.5px;font-weight:800;color:var(--brown);height:14px;white-space:nowrap}
+.sp i{font-style:normal;font-size:10px;color:var(--sub);max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;height:14px}
+.clock{display:flex;gap:8px;align-items:center;background:var(--cream);border-radius:14px;padding:11px 14px;margin-top:12px;font-size:13.5px}
+.clock b{font-weight:900}
+h3{font-size:15px;margin:22px 2px 8px}
+.gogrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gogrid a{display:flex;flex-direction:column;gap:6px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px;text-decoration:none;min-height:96px}
+.gogrid a .ic{color:var(--brown)}
+.gogrid a b{font-size:14.5px}.gogrid a span{font-size:11.5px;color:var(--sub);line-height:1.4}
+.gogrid a.wide{grid-column:1/3;flex-direction:row;align-items:center;min-height:0}
+.gogrid a.wide span{margin-left:auto}
+.try{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.try a{font-size:12.5px;font-weight:800;text-decoration:none;border-radius:999px;padding:6px 11px;background:#fff;border:1px solid var(--line)}
+.try a em{font-style:normal;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+/* ---------- 보상함 ---------- */
+.rw{display:flex;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff;margin-bottom:9px}
+.rw .l{width:84px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#EDE6D6;color:var(--sub);font-weight:800;font-size:12px;border-right:2px dashed #fff}
+.rw .l b{font-size:18px;color:var(--char)}
+.rw.on{border:1.5px solid var(--brown)}.rw.on .l{background:var(--brown);color:#F4E2B8}.rw.on .l b{color:#fff}
+.rw .r{padding:12px 14px;min-width:0}
+.rw .r b{font-size:15px}.rw .r p{margin:2px 0 6px;font-size:12px;color:var(--sub)}
+.rw .r .btn{display:inline-block;background:var(--mustard);color:var(--char);font-weight:800;font-size:12.5px;border-radius:999px;padding:4px 12px;text-decoration:none}
+.rw .r .need{font-size:12.5px;font-weight:800;color:var(--brown)}
+.park{background:var(--char);color:var(--cream);border-radius:18px;padding:14px;margin-top:10px;display:block;text-decoration:none}
+.park .h{display:flex;justify-content:space-between;align-items:center}.park .h b{font-size:15px}.park .h small{font-size:11.5px;color:#BFB4A0}
+.park .g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0 8px}
+.park .g div{background:#3A352E;border-radius:10px;padding:7px 8px;min-width:0}
+.park .g small{display:block;font-size:11px;color:#BFB4A0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.park .g b{font-size:15px}
+.park p{margin:0;font-size:12px;color:#D8CDB6}
+.hide{display:none!important}
+.foot{font-size:11.5px;color:var(--sub);text-align:center;margin-top:20px;line-height:1.6}
+</style>
+</head>
+<body>
+<section id="cover">
+  <div><div class="k">제18회 유성국화축제 · 2027 (시뮬레이션)</div><div class="k2">QR을 찍을 때마다 도장이 쌓여요</div></div>
+  <div class="book" id="book"><div class="fr">
+    <div class="yd">YUSEONG · DAEJEON</div>
+    <div class="emb" id="emb"></div>
+    <div><h1>유성 국화 여권</h1><div class="en">CHRYSANTHEMUM PASSPORT</div></div>
+    <div class="rule" id="rule1"></div>
+  </div></div>
+  <button class="open" id="openBtn">여권 펼치기</button>
+  <div class="priv" id="priv">처음이면 닉네임·소속만 등록해요<br>실명·연락처는 받지 않아요</div>
+</section>
+
+<main class="wrap hide" id="app"></main>
+
+<script src="config.js"></script>
+<script>if(!new URLSearchParams(location.search).get('s')) history.replaceState(null, '', location.pathname + '?s=fest' + location.search.replace(/^\?/, '&'));</script>
+<script src="mode.js"></script>
+<script src="parking.js"></script>
+<script>
+var Q = new URLSearchParams(location.search), SRV = (Q.get('s') || 'fest').replace(/[^a-z]/g, ''); if(SRV === 'pilot' || !(window.QR_SERVERS || {})[SRV]) SRV = 'fest';
+var API = window.QR_SERVERS[SRV].url, SQ = '?s=' + SRV, KEY = 'qrhunt-token-' + SRV, GOAL = 10;
+var OPENED = false, TAB = Q.get('tab') === 'reward' ? 'reward' : 'pass', MODE2 = 'scan', D = null;
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function ic(n, s){ return YP.icon(n, s); }
+function tok(){ try{ return localStorage.getItem(KEY); }catch(e){ return null; } }
+var app = document.getElementById('app'), cover = document.getElementById('cover');
+document.getElementById('emb').innerHTML = YP.logo(92);
+document.getElementById('rule1').innerHTML = ic('qr', 15) + '스캔 1회 = 도장 1개';
+function nav(show){ var n = document.querySelector('.ypnav'); if(n) n.style.display = show ? '' : 'none'; var m = document.querySelector('.modebar'); if(m) m.style.display = show ? '' : 'none'; }
+
+/* 로그인 전·발표용 예시 여권 (국화탐험대, 도장 4개) */
+function demo(){
+  return { demo: true, me: { nick: '국화탐험대', team: '한밭대', rank: 0, total: 6 }, round: { open: true, next: '16:00' },
+    pass: { visited: [{ id: 'Y-01', loc: '종합안내소', mod: '안내' }, { id: 'Y-09', loc: '동편무대', mod: '보물' }, { id: 'Y-13', loc: '태권V 조형물', mod: '퀴즈' }, { id: 'Y-16', loc: '미니한빛탑', mod: '코스' }], spots: 4, total: 23 } };
+}
+function passNo(d){ var s = String(d.me.nick || '') + (d.me.team || ''), h = 0; for(var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 9973; return 'YS-' + ('000' + h).slice(-4); }
+
+/* ---------- 내 여권 ---------- */
+function passView(d){
+  var v = (d.pass && d.pass.visited) || [], n = Math.min(v.length, GOAL), r = d.round || {};
+  var MS = [[3, '3곳', '상점쿠폰'], [7, '7곳', '국화 교환권'], [10, '완주', '지역쿠폰 추첨']];
+  var h = '<div class="top"><div><div class="no">유성 국화 여권 No. ' + passNo(d) + '</div><h2>내 여권</h2></div><span class="who">' + esc(d.me.nick) + ' · ' + esc(d.me.team || '') + '</span></div>';
+  if(d.demo) h += '<div class="demo">예시 여권이에요. 축제장 QR을 찍으면 내 도장으로 바뀌어요. <a href="index.html' + SQ + '&qr=Y-01"><b>Y-01에서 시작하기</b></a></div>';
+  h += '<div class="prog"><div class="row"><span>모은 도장</span><b>' + n + ' <small>/ ' + GOAL + '</small></b></div><div class="track"><i style="width:' + (n / GOAL * 100) + '%"></i></div>' +
+    '<div class="ms">' + MS.map(function(m){ return '<div class="' + (n >= m[0] ? 'on' : '') + '"><b>' + m[1] + '</b>' + m[2] + '</div>'; }).join('') + '</div></div>';
+  h += '<div class="seg" id="seg"><button data-m="scan" class="' + (MODE2 === 'scan' ? 'on' : '') + '">1단 스캔형</button><button data-m="quiz" class="' + (MODE2 === 'quiz' ? 'on' : '') + '">2단 퀴즈형</button></div>';
+  h += '<p class="segd">' + (MODE2 === 'scan' ? '찍기만 하면 바로 보물인지 확인돼요 · 아이·어르신 추천 · <a href="index.html' + SQ + '&qr=Y-09">보물 QR 체험</a>' : '찍고 문제를 맞혀야 도장이 찍혀요 · 청년·대학생 추천 · <a href="index.html' + SQ + '&qr=Y-13">퀴즈 QR 체험</a>') + '</p>';
+  h += '<div class="stamps">';
+  for(var i = 0; i < GOAL; i++){
+    var s = v[i], lab = i === 2 ? '상점쿠폰' : i === 6 ? '국화 교환권' : i === 9 ? '완주' : '';
+    h += '<div class="sp">' + (s ? '<div class="c got' + (s.date && s.date === d.date ? ' new' : '') + '"><small>' + esc(s.mod || 'QR') + '</small><b>#' + esc(String(s.id).split('-').pop()) + '</b></div>' : '<div class="c">' + (i + 1) + '</div>') +
+      '<em>' + lab + '</em><i>' + (s ? esc(s.loc) : '') + '</i></div>';
+  }
+  h += '</div>';
+  h += '<div class="clock"><span style="color:var(--brown)">' + ic('clock', 20) + '</span><span>' + (r.open && r.next ? '<b>' + esc(r.next) + '</b>에 보물 위치가 바뀌어요 · 보물 QR 4곳 중 3곳 당첨' : r.next ? '다음 보물 시작 <b>' + esc(r.next) + '</b>' : '보물은 2시간마다 바뀌어요') + '</span></div>';
+  h += '<h3>QR을 찍었다고 치고 체험하기</h3><div class="try">' + [['Y-01', '안내', '중앙 허브', '#736A5C'], ['Y-09', '보물', '보물', '#EAB33F'], ['Y-13', '퀴즈', '퀴즈', '#8A6FB0'], ['Y-18', '코스', '데이트 코스', '#5E8C61'], ['Y-08', '안내', '밤티 인증', '#736A5C'], ['P-05', '주차', '노상 주차 기둥', '#2B2722']].map(function(t){
+    return '<a href="' + (t[1] === '주차' ? 'parking.html' + SQ + '&qr=' + t[0] : 'index.html' + SQ + '&qr=' + t[0]) + '"><em style="background:' + t[3] + '"></em>' + t[0] + ' ' + t[2] + '</a>'; }).join('') + '</div>';
+  h += '<h3>이 여권으로 할 수 있는 것</h3><div class="gogrid">' +
+    '<a href="index.html' + SQ + '"><span class="ic">' + ic('stamp', 22) + '</span><b>내 기록·코스 지도</b><span>점수, 코스 루트, 축제장 한눈에 보기</span></a>' +
+    '<a href="contest.html' + SQ + '"><span class="ic">' + ic('camera', 22) + '</span><b>사진 콘테스트</b><span>밤티 자랑대회 · 국화 데이트 사진</span></a>' +
+    '<a href="parking.html' + SQ + '"><span class="ic">' + ic('parking', 22) + '</span><b>주차 안내</b><span>주차장 활성·남은 자리·추천 길</span></a>' +
+    '<a href="rank.html' + SQ + '"><span class="ic">' + ic('trophy', 22) + '</span><b>순위 · 현황</b><span>대학 대항전 · 시간대별 참여</span></a>' +
+    '<a class="wide" href="portal.html' + SQ + '"><span class="ic">' + ic('info', 22) + '</span><b>플랫폼 소개</b><span>QR 하나로 하는 4가지</span></a></div>';
+  return h;
+}
+/* ---------- 보상함 ---------- */
+function rewardView(d){
+  var n = Math.min(((d.pass && d.pass.visited) || []).length, GOAL), next = n < 3 ? 3 : n < 7 ? 7 : n < 10 ? 10 : 0;
+  var h = '<div class="no">도장 ' + n + '개' + (next ? ' · 다음 보상까지 ' + (next - n) + '곳' : ' · 모든 보상 달성') + '</div><div class="top" style="margin-bottom:12px"><h2>보상함</h2></div>';
+  var R = [[3, '3곳', '쿠폰', '주변 상점 할인 쿠폰', '축제장 인근 상인회 참여 점포 · [할인 내용]', '사용하기'], [7, '7곳', '국화', '국화 화분 교환권', '폐막 후 전시 국화로 교환 · 선착순 [수량]', '교환 안내'], [10, '완주', '추첨', '지역쿠폰(대전사랑카드) 추첨', '완주자 중 하루 2명 · 3만 원 충전', '응모 완료']];
+  h += R.map(function(x){ var on = n >= x[0];
+    return '<div class="rw' + (on ? ' on' : '') + '"><div class="l">' + x[1] + '<b>' + x[2] + '</b></div><div class="r"><b>' + x[3] + '</b><p>' + esc(x[4]) + '</p>' + (on ? '<span class="btn">' + x[5] + '</span>' : '<span class="need">' + (x[0] - n) + '곳 더 모으면 ' + (x[0] === 10 ? '응모' : '열려요') + '</span>') + '</div></div>'; }).join('');
+  h += '<h3>같은 여권으로 할 수 있는 것</h3><div class="gogrid">' +
+    '<a href="contest.html' + SQ + '"><span class="ic">' + ic('camera', 22) + '</span><b>사진 콘테스트</b><span>올리고 \'좋아요\'로 투표</span></a>' +
+    '<a href="index.html' + SQ + '&qr=Y-16"><span class="ic">' + ic('users', 22) + '</span><b>2인 미션 코스</b><span>국화 데이트 코스 · 「연(連) In 대전」 회차 연계</span></a></div>';
+  /* 주차장 혼잡도: 지금 시각 기준 시뮬레이션 */
+  var now = new Date(), day = now.getDay(), min = now.getHours() * 60 + now.getMinutes();
+  if(min < 600 || min > 1290){ day = 6; min = 900; }
+  var L = window.YP_PARKING.at(day, min).filter(function(l){ return !l.temp; }).slice(0, 3);
+  var tOn = window.YP_PARKING.at(day, min).some(function(l){ return l.temp && l.active; });
+  h += '<a class="park" href="parking.html' + SQ + '"><div class="h"><b>주차장 혼잡도</b><small>30분마다 갱신 · 시뮬레이션</small></div><div class="g">' +
+    L.map(function(l){ return '<div><small>' + esc(l.name.replace(' 지상주차장', '').replace(' 주차장', '')) + '</small><b style="color:' + window.YP_PARKING.col[l.st] + '">' + l.label + '</b></div>'; }).join('') +
+    '</div><p>노상 임시 구역 ' + (tOn ? '<b style="color:var(--mustard)">활성</b>' : '비활성') + ' · 주차 기둥 QR을 찍으면 남은 자리와 추천 길이 떠요 ›</p></a>';
+  return h;
+}
+function render(){
+  if(!D) return;
+  app.innerHTML = (TAB === 'reward' ? rewardView(D) : passView(D)) + '<p class="foot">유성 국화 여권 · 축제 시뮬레이션(가상 데이터)<br>국립한밭대학교 도시공학과 팀 보물사냥꾼 · 2026 학생 리빙랩</p>';
+  var sg = document.getElementById('seg');
+  if(sg) sg.onclick = function(e){ var m = e.target.getAttribute && e.target.getAttribute('data-m'); if(m){ MODE2 = m; render(); } };
+}
+function openPassport(){
+  var b = document.getElementById('book'); b.classList.add('opening');
+  setTimeout(function(){ cover.classList.add('hide'); app.classList.remove('hide'); nav(true); window.scrollTo(0, 0); OPENED = true; if(D) render(); else app.innerHTML = '<p class="foot">여권을 펼치는 중…</p>'; try{ sessionStorage.setItem('yp-opened', '1'); }catch(e){} }, 420);
+}
+document.getElementById('openBtn').onclick = openPassport;
+/* 이미 펼친 적 있거나 보상함 탭으로 들어오면 표지 건너뜀 */
+var skip = Q.get('tab') || Q.get('open'); try{ skip = skip || sessionStorage.getItem('yp-opened'); }catch(e){}
+nav(false);
+if(skip){ cover.classList.add('hide'); app.classList.remove('hide'); setTimeout(function(){ nav(true); }, 0); app.innerHTML = '<p class="foot">여권을 펼치는 중…</p>'; }
+var t = tok();
+if(!t || Q.get('demo')){ D = demo(); if(skip || OPENED) render(); }
+else {
+  fetch(API + '?api=myStatus&a=' + encodeURIComponent(JSON.stringify([t])) + '&_=' + Date.now(), { redirect: 'follow' })
+    .then(function(r){ return r.json(); }).then(function(d){ D = (d && d.me && !d.error) ? d : demo(); if(!d.error && d.me) document.getElementById('openBtn').textContent = d.me.nick + '님의 여권 펼치기'; if(skip || OPENED) render(); })
+    .catch(function(){ D = demo(); if(skip || OPENED) render(); });
+}
+</script>
+</body>
+</html>

@@ -56,6 +56,7 @@ footer a{color:var(--sub)}
   </footer>
 </div>
 <script src="config.js"></script>
+<script src="mode.js"></script>
 <script>
 var S = window.QR_SERVERS || {};
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
@@ -76,8 +77,10 @@ var tries = [['Y-01','안내','중앙 허브'],['Y-02','안내','주차장 입�
 var fest = box('fest', {
   head: '<p class="desc">같은 시스템을 유림공원 축제장에 옮겨 본 모의 운영이에요. 참가자 2,941명 · 16일 운영을 가정한 가상 데이터로 기능을 보여 줘요.</p>',
   body: '<div class="warn">여기 나오는 사람·점수·사진 수치는 실제가 아니에요.</div>'+
-        '<a class="btn main" href="portal.html'+Q('fest')+'"><i>🧭</i><div><b>플랫폼 소개</b><span>QR 하나로 할 수 있는 것 · 구역 안내</span></div></a>'+
+        '<a class="btn main" href="passport.html'+Q('fest')+'" style="background:#2B2722;color:#FBEFD2"><i style="background:#FBEFD2">'+(window.YP?YP.logo(26):'')+'</i><div><b>유성 국화 여권 열기</b><span style="color:#D8CDB6">축제 시뮬레이션 메인 · 도장·보상·사진·주차</span></div></a>'+
+        '<a class="btn" href="portal.html'+Q('fest')+'"><i>🧭</i><div><b>플랫폼 소개</b><span>QR 하나로 할 수 있는 것 · 구역 안내</span></div></a>'+
         '<div class="try"><p>📷 QR을 찍었다고 치고 체험해 보기</p><div class="chips">'+tries.map(function(t){ return '<a href="./?s=fest&qr='+t[0]+'"><em style="background:'+MC[t[1]]+'"></em>'+t[0]+' '+esc(t[2])+'</a>'; }).join('')+'</div></div>'+
+        '<a class="btn" href="parking.html'+Q('fest')+'"><i>🅿️</i><div><b>주차 안내</b><span>주차장 활성·남은 자리 · 기둥 QR 추천 길</span></div></a>'+
         '<a class="btn" href="contest.html'+Q('fest')+'"><i>📸</i><div><b>자랑대회</b><span>밤티 자랑대회 · 국화 데이트 사진</span></div></a>'+
         '<a class="btn" href="rank.html'+Q('fest')+'"><i>🏆</i><div><b>실시간 순위 · 현황</b><span>대학 대항전 · 개인 · 시간대별 참여</span></div></a>'
 });
