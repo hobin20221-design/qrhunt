@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1F4E9C">
+<title>국화 속에 숨은 유성이를 찾아라</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<!--
+  「국화 속에 숨은 유성이를 찾아라」 방문객용 모바일 웹 (화면 설계 시안 S0~S15 + 운영자 화면)
+  - 서버 없이 동작하는 정적 시안. 진행 상황은 이 기기(localStorage)에만 저장.
+  - QR 딥링크:  hide.html?qr=Z1 ~ Z6 (구역), T1 (시간 한정), SHOP (가게)
+  - 시연용:     ?now=14:30 (시각 고정), ?labels=1 (기능 라벨 표시), 오른쪽 아래 [시연] 버튼으로 화면 이동
+  - 캐릭터: 유성구 캐릭터 PNG 원본을 크기만 줄여 사용 (yu/*.png). 포즈 변형 없음.
+-->
+<style>
+:root{--y:#F5B82E;--y2:#FFF1C9;--b:#1F4E9C;--b2:#E8EEF8;--bg:#FFFBF2;--ink:#2B2B2B;--sub:#5B5B5B;--g:#E9E4D8;--line:#DDD6C6;--ok:#2E7D4F;--r:18px;color-scheme:light}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+html.big{font-size:19px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard Variable",Pretendard,-apple-system,system-ui,sans-serif;font-size:1rem;line-height:1.55;word-break:keep-all;overflow-wrap:anywhere}
+button,input{font:inherit;color:inherit}
+img{max-width:100%}
+.wrap{max-width:440px;margin:0 auto;padding:0 16px 120px}
+/* header */
+.top{position:sticky;top:0;z-index:20;background:var(--b);color:#fff}
+.top .in{max-width:440px;margin:0 auto;display:flex;align-items:center;gap:8px;padding:10px 16px}
+.top b{font-size:1.05rem;letter-spacing:-.02em;flex:1}
+.top b small{display:block;font-size:.72rem;font-weight:500;opacity:.8}
+.chipbtn{border:1.5px solid rgba(255,255,255,.6);background:transparent;color:#fff;border-radius:99px;padding:6px 12px;font-size:.85rem;font-weight:700;min-height:40px}
+.chipbtn[aria-pressed=true]{background:#fff;color:var(--b)}
+/* buttons */
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:54px;border:0;border-radius:16px;background:var(--y);color:#2B2B2B;font-weight:800;font-size:1.06rem;text-decoration:none;cursor:pointer;box-shadow:0 3px 0 #D99A12}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #D99A12}
+.btn.blue{background:var(--b);color:#fff;box-shadow:0 3px 0 #163a75}
+.btn.ghost{background:#fff;color:var(--b);border:2px solid var(--b);box-shadow:none}
+.btn[disabled]{background:var(--g);color:#8a8578;box-shadow:none;cursor:not-allowed}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stack>*+*{margin-top:10px}
+/* character + bubble */
+.say{display:flex;align-items:flex-end;gap:8px;margin:14px 0}
+.say img{width:96px;height:96px;object-fit:contain;flex:none}
+.bub{position:relative;background:#fff;border:2px solid var(--b);border-radius:22px;padding:12px 15px;font-weight:700;font-size:1.04rem;color:#1d2f55;box-shadow:0 2px 0 rgba(31,78,156,.15)}
+.bub:before{content:"";position:absolute;left:-10px;bottom:18px;border:8px solid transparent;border-right-color:var(--b)}
+.bub:after{content:"";position:absolute;left:-6px;bottom:19px;border:7px solid transparent;border-right-color:#fff}
+.bub.up{text-align:center}.bub.up:before{left:50%;top:-18px;bottom:auto;margin-left:-9px;border:9px solid transparent;border-bottom-color:var(--b)}.bub.up:after{left:50%;top:-13px;bottom:auto;margin-left:-8px;border:8px solid transparent;border-bottom-color:#fff}
+.bub small{display:block;font-weight:600;color:var(--sub);font-size:.82rem;margin-top:2px}
+.pop{animation:pop .45s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes pop{from{opacity:0;transform:scale(.6) translateY(10px)}}
+.fade{animation:fade .5s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}}
+/* card */
+.card{background:#fff;border-radius:var(--r);padding:16px;box-shadow:0 1px 0 var(--line),0 6px 18px rgba(60,45,10,.06);margin:14px 0}
+.card h3{margin:0 0 8px;font-size:1.06rem;color:var(--b)}
+.muted{color:var(--sub);font-size:.92rem}
+.h1{font-size:1.45rem;font-weight:900;letter-spacing:-.03em;color:var(--b);margin:18px 0 4px;line-height:1.3}
+/* progress */
+.prog{display:flex;align-items:center;gap:10px;margin-top:14px}
+.bar{flex:1;height:14px;background:var(--g);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#F5B82E,#F09A1A);border-radius:99px;transition:width .8s}
+.cnt{font-weight:900;font-size:1.25rem;color:var(--b)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:99px;background:var(--g);font-weight:800;font-size:.9rem}
+.badge.on{background:var(--b);color:#fff}
+.next{margin-top:8px;font-weight:800;color:#9a5d00}
+/* dex */
+.dex{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.slot{position:relative;aspect-ratio:3/4;background:#fff;border:2px solid var(--line);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:4px 2px 5px;overflow:hidden;cursor:pointer}
+.slot img{width:100%;flex:1;min-height:0;object-fit:contain;filter:brightness(0) opacity(.16);transition:filter 1s ease}
+.slot.got{border-color:var(--y);background:linear-gradient(#fff,#FFF6DD)}
+.slot.got img{filter:none}
+.slot span{font-size:.62rem;font-weight:800;color:#8a8578;line-height:1.2;text-align:center}
+.slot.got span{color:var(--b)}
+.slot em{position:absolute;top:3px;left:4px;font-style:normal;font-size:.58rem;font-weight:800;color:#8a8578}
+.slot.bonus{border-style:dashed}
+.dexlegend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.78rem;color:var(--sub);margin:8px 0 0}
+.bon{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.bon .slot{aspect-ratio:auto;flex-direction:row;height:78px;gap:6px;padding:4px 8px;justify-content:flex-start}
+.bon .slot img{width:62px;flex:none;height:100%}
+.bon .slot span{font-size:.8rem;text-align:left}
+/* photo placeholder */
+.ph{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:4/3;display:flex;align-items:flex-end;background:var(--c,#cfd9c4)}
+.ph:before{content:"";position:absolute;left:-10px;right:-10px;bottom:-8px;height:58%;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(0.0 20 20)' fill='%23FFCB45' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(25.7 20 20)' fill='%23F5B82E' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(51.4 20 20)' fill='%23FFCB45' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(77.1 20 20)' fill='%23F5B82E' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(102.9 20 20)' fill='%23FFCB45' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(128.6 20 20)' fill='%23F5B82E' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(154.3 20 20)' fill='%23FFCB45' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(180.0 20 20)' fill='%23F5B82E' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(205.7 20 20)' fill='%23FFCB45' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(231.4 20 20)' fill='%23F5B82E' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(257.1 20 20)' fill='%23FFCB45' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(282.9 20 20)' fill='%23F5B82E' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(308.6 20 20)' fill='%23FFCB45' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(334.3 20 20)' fill='%23F5B82E' stroke='%23E39A10' stroke-width='.6'/%3E%3Ccircle cx='20' cy='20' r='6' fill='%23E08A00'/%3E%3C/svg%3E") 0 0/46px 40px,url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(0.0 20 20)' fill='%23FFCB45' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(25.7 20 20)' fill='%23F5B82E' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(51.4 20 20)' fill='%23FFCB45' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(77.1 20 20)' fill='%23F5B82E' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(102.9 20 20)' fill='%23FFCB45' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(128.6 20 20)' fill='%23F5B82E' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(154.3 20 20)' fill='%23FFCB45' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(180.0 20 20)' fill='%23F5B82E' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(205.7 20 20)' fill='%23FFCB45' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(231.4 20 20)' fill='%23F5B82E' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(257.1 20 20)' fill='%23FFCB45' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(282.9 20 20)' fill='%23F5B82E' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(308.6 20 20)' fill='%23FFCB45' stroke='%23E39A10' stroke-width='.6'/%3E%3Cellipse cx='20' cy='8' rx='4.2' ry='9' transform='rotate(334.3 20 20)' fill='%23F5B82E' stroke='%23E39A10' stroke-width='.6'/%3E%3Ccircle cx='20' cy='20' r='6' fill='%23E08A00'/%3E%3C/svg%3E") 23px 20px/46px 40px,linear-gradient(#6f9b52,#557d3d)}.ph:after{content:"";position:absolute;left:0;right:0;top:0;height:48%;background:linear-gradient(#bcd7ee,#e4eff7)}
+.ph img.real{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ph>*{z-index:1}.ph .cap{position:relative;margin:10px;background:rgba(255,255,255,.93);border-radius:10px;padding:6px 10px;font-weight:800;font-size:.9rem}
+.ph .tag{position:absolute;top:8px;left:8px;background:rgba(43,43,43,.75);color:#fff;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:8px}
+.timer{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--b2);border-radius:14px;padding:10px 14px;margin-top:12px;font-weight:700;color:var(--b)}
+.timer b{font-variant-numeric:tabular-nums;font-size:1.2rem;letter-spacing:.02em}
+/* tabbar */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.tabs .in{max-width:440px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.tabs a{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:62px;text-decoration:none;color:#77705f;font-weight:800;font-size:.8rem;gap:1px}
+.tabs a i{font-style:normal;font-size:1.35rem;line-height:1.1}
+.tabs a.on{color:var(--b)}
+.tabs a.on i{transform:scale(1.1)}
+.tabs.hide{display:none}
+/* forms */
+label.f{display:block;font-weight:800;margin:14px 0 6px}
+label.f small{font-weight:600;color:var(--sub)}
+input[type=text],input[type=tel]{width:100%;min-height:52px;border:2px solid var(--line);border-radius:14px;padding:0 14px;background:#fff;font-size:1.02rem}
+input:focus{outline:3px solid rgba(31,78,156,.3);border-color:var(--b)}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:12px;border:2px solid var(--line);border-radius:14px;background:#fff;margin-top:8px;cursor:pointer;font-size:.95rem}
+.chk input{width:24px;height:24px;flex:none;accent-color:var(--b);margin:1px 0 0}
+.chk b{display:block}
+.chk.req{border-color:#d9a020}
+/* rules */
+.rules{list-style:none;margin:0;padding:0;counter-reset:r}
+.rules li{counter-increment:r;display:flex;gap:10px;align-items:flex-start;padding:9px 0;font-weight:700}
+.rules li+li{border-top:1px dashed var(--line)}
+.rules li:before{content:counter(r);flex:none;width:28px;height:28px;border-radius:50%;background:var(--y);display:flex;align-items:center;justify-content:center;font-weight:900}
+/* stage animations */
+.stage{position:relative;height:250px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;margin-top:6px}
+.stage .yu{width:230px;position:relative;z-index:2}
+.rise{animation:rise .9s .2s cubic-bezier(.3,1.4,.5,1) both}
+@keyframes rise{from{transform:translateY(75%)}}
+.flowers{position:absolute;left:0;right:0;bottom:-14px;z-index:3;display:flex;justify-content:center;line-height:0}.flowers .fl{margin:0 -9px}.fl{vertical-align:-4px}
+.shake{animation:shake .5s 2 ease-in-out both}
+@keyframes shake{25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
+.jump{animation:jump .7s .9s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes jump{from{transform:translateY(90%) scale(.8);opacity:0}}
+.runout{animation:runout 1.4s .3s ease-in both}
+@keyframes runout{0%{transform:translateX(0)}30%{transform:translateX(-12px)}100%{transform:translateX(130vw)}}
+.feet{position:absolute;left:0;right:0;bottom:30px;display:flex;justify-content:center;gap:16px;font-size:1.7rem}
+.feet span{opacity:0;animation:step .3s both}
+@keyframes step{to{opacity:1}}
+.bloom{animation:bloom 1.1s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes bloom{from{transform:scale(.2) rotate(-30deg);opacity:0}}
+.fill{display:flex;align-items:center;gap:12px;background:#fff;border-radius:16px;padding:10px 12px;border:2px solid var(--y);margin:12px 0}
+.fill .slot{width:62px;flex:none;cursor:default}
+.fill .slot img{filter:brightness(0) opacity(.16)}
+.fill .slot.go img{filter:none}
+.fill .slot.go{border-color:var(--y)}
+/* grid vote */
+.sortbar{display:flex;gap:6px;margin:6px 0 10px}
+.sortbar button{border:2px solid var(--line);background:#fff;border-radius:99px;padding:6px 14px;font-weight:800;min-height:42px}
+.sortbar button.on{border-color:var(--b);background:var(--b);color:#fff}
+.vg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vc{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.vc .ph{border-radius:0}
+.vc .ph .cap{font-size:.78rem;margin:6px;padding:3px 7px}
+.vc .act{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 6px 10px}
+.vc .who{font-size:.78rem;color:var(--sub);font-weight:700;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.heart{border:0;background:transparent;min-width:48px;min-height:48px;font-weight:900;font-size:.95rem;display:flex;align-items:center;gap:3px;justify-content:flex-end;color:#c0392b}
+.heart i{font-style:normal;font-size:1.3rem;filter:grayscale(1);opacity:.55}
+.heart.on i{filter:none;opacity:1;animation:pop .35s both}
+.rep{border:0;background:transparent;color:#8a8578;font-size:.74rem;font-weight:700;text-decoration:underline;min-height:32px;padding:0 6px}
+/* map */
+.map{position:relative;aspect-ratio:1/1;border-radius:18px;overflow:hidden;background:#dfeccf;border:2px solid var(--line)}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.pin{position:absolute;transform:translate(-50%,-100%);border:0;background:transparent;padding:0;cursor:pointer}
+.pin b{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--y);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.pin b span{transform:rotate(45deg);font-weight:900;font-size:.85rem}
+.pin.me b{background:var(--b);color:#fff}
+.maptag{position:absolute;bottom:8px;left:8px;right:8px;background:rgba(255,255,255,.92);border-radius:10px;padding:6px 10px;font-size:.78rem;font-weight:700;color:var(--sub)}
+/* modal & sheet */
+.dim{position:fixed;inset:0;z-index:60;background:rgba(20,25,40,.55);display:flex;align-items:center;justify-content:center;padding:16px;animation:fade .25s both}
+.modal{width:100%;max-width:400px;background:var(--bg);border-radius:24px;padding:20px 18px 18px;text-align:center;max-height:92vh;overflow:auto}
+.modal .yu{width:150px;margin:0 auto;display:block}
+.medal{display:inline-flex;align-items:center;gap:6px;background:var(--b);color:#fff;font-weight:900;font-size:1.25rem;border-radius:99px;padding:8px 18px;margin:6px 0}
+.sheetdim{align-items:flex-end;padding:0}
+.sheet{width:100%;max-width:440px;background:#fff;border-radius:22px 22px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
+.sheet h4{margin:4px 0 10px;font-size:1.05rem;color:var(--b)}
+.sheet .list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sheet .list button{min-height:48px;border:2px solid var(--line);border-radius:12px;background:var(--bg);font-weight:700;font-size:.86rem;text-align:left;padding:6px 10px;line-height:1.3}
+.sheet .list button b{color:var(--b)}
+.fab{position:fixed;right:12px;bottom:76px;z-index:40;border:0;border-radius:99px;background:#2B2B2B;color:#fff;font-weight:800;font-size:.8rem;padding:9px 13px;opacity:.82;min-height:40px}
+.scanfab{display:flex;align-items:center;justify-content:center;gap:8px}
+/* labels */
+.labs{display:none;flex-wrap:wrap;gap:5px;margin:10px 0 0}
+html.lab .labs{display:flex}
+.lb{font-size:.72rem;font-weight:800;border-radius:7px;padding:3px 7px;border:1.5px solid}
+.lb.E{color:#1d5e36;border-color:#7fbf98;background:#ecf7f0}
+.lb.M{color:#7a4b00;border-color:#e5b45a;background:#fff5e0}
+.lb.A{color:#9b1c1c;border-color:#e99;background:#fdeeee}
+.lb.C{color:#4b4b4b;border-color:#bbb;background:#f3f3f3}
+.need{display:inline-block;font-size:.74rem;font-weight:800;color:#4b4b4b;background:#f0ece2;border-radius:6px;padding:1px 6px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:80;background:#2B2B2B;color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;font-size:.92rem;max-width:90vw;animation:fade .25s both}
+.center{text-align:center}
+.big-emoji{font-size:3rem;line-height:1}
+.note{background:var(--y2);border-radius:14px;padding:12px 14px;font-weight:700;font-size:.93rem;margin:12px 0}
+.msg{border-left:4px solid var(--b);background:#fff;border-radius:0 12px 12px 0;padding:10px 12px;margin:8px 0;font-size:.92rem}
+.msg.ad{border-color:#c0392b}
+/* admin */
+.adm .top{background:#2B2B2B}
+table.t{width:100%;border-collapse:collapse;font-size:.88rem;background:#fff;border-radius:12px;overflow:hidden}
+table.t th,table.t td{padding:8px;border-bottom:1px solid var(--g);text-align:left}
+table.t th{background:#f5f2ea;font-size:.8rem}
+select{min-height:44px;border:2px solid var(--line);border-radius:10px;background:#fff;font:inherit;padding:0 8px;width:100%}
+.swipe{position:relative;height:330px;margin:10px 0}
+.swipe .sc{position:absolute;inset:0;background:#fff;border-radius:18px;box-shadow:0 6px 20px rgba(0,0,0,.12);padding:10px;touch-action:pan-y;transition:transform .3s,opacity .3s}
+.swipe .sc .ph{aspect-ratio:auto;height:230px}
+.swipe .stamp{position:absolute;top:24px;font-weight:900;font-size:1.4rem;border:3px solid;border-radius:10px;padding:2px 10px;opacity:0;transform:rotate(-12deg)}
+.swipe .stamp.okk{left:20px;color:var(--ok)}
+.swipe .stamp.no{right:20px;color:#c0392b;transform:rotate(12deg)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important;transition-duration:.01s!important}}
+</style>
+</head>
+<body>
+<header class="top"><div class="in">
+  <b>국화 속에 숨은 유성이를 찾아라<small id="sub">유성국화축제 · 유림공원 숨바꼭질</small></b>
+  <button class="chipbtn" id="bigBtn" aria-pressed="false" title="큰 글씨 모드">가 큰 글씨</button>
+</div></header>
+<main class="wrap" id="app"></main>
+<nav class="tabs" id="tabs"><div class="in">
+  <a href="#/dex" data-t="dex"><i>📖</i>도감</a>
+  <a href="#/hint" data-t="hint"><i>🔍</i>힌트</a>
+  <a href="#/vote" data-t="vote"><i>📷</i>사진·투표</a>
+  <a href="#/map" data-t="map"><i>🗺️</i>오늘의 지도</a>
+</div></nav>
+<button class="fab" id="fab">시연</button>
+<div id="layer"></div>
+
+<script>
+(function(){
+'use strict';
+var Q = new URLSearchParams(location.search);
+var KEY = 'yu-hide-v1';
+var $ = function(s, r){ return (r || document).querySelector(s); };
+var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+
+/* ---------- 저장 ---------- */
+var S; try{ S = JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ S = {}; }
+S.found = S.found || {}; S.votes = S.votes || {}; S.more = S.more || {};
+var PHOTOS = []; try{ PHOTOS = JSON.parse(localStorage.getItem(KEY + '-ph')) || []; }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function savePhotos(){ try{ localStorage.setItem(KEY + '-ph', JSON.stringify(PHOTOS)); }catch(e){ toast('사진이 커서 이 기기에 저장하지 못했어요. 화면을 닫기 전까지는 보여요.'); } }
+
+/* ---------- 도감 데이터 (구역명·장소는 예시 [확인 필요]) ---------- */
+var SLOTS = [
+  {id:'m1', kind:'마중', name:'마중 유성이', img:'base'},
+  {id:'m2', kind:'마중', name:'반짝 유성이', img:'19'},
+  {id:'z1', kind:'구역', name:'OK 유성이', img:'02', code:'Z1', zone:'A 구역(정문)', spot:'정문 노란 국화 아치 아래', c:'#cfe0c0'},
+  {id:'z2', kind:'구역', name:'깔깔 유성이', img:'06', code:'Z2', zone:'B 구역(분수대)', spot:'분수대 옆 하얀 국화탑', c:'#c7dbe8'},
+  {id:'z3', kind:'구역', name:'수줍은 유성이', img:'12', code:'Z3', zone:'C 구역(포토존)', spot:'하트 포토존 뒤 화분 사이', c:'#e8d3d3'},
+  {id:'z4', kind:'구역', name:'실험실 유성이', img:'14', code:'Z4', zone:'D 구역(꽃 터널)', spot:'꽃 터널 출구 오른쪽', c:'#d9d1e8'},
+  {id:'z5', kind:'구역', name:'책벌레 유성이', img:'10', code:'Z5', zone:'E 구역(연못)', spot:'징검다리 건너 첫 번째 벤치', c:'#cde3dc'},
+  {id:'z6', kind:'구역', name:'족욕 유성이', img:'17', code:'Z6', zone:'F 구역(체험존)', spot:'족욕 체험장 입구 국화 화분', c:'#e6dcc6'},
+  {id:'t1', kind:'시간 한정', name:'별보기 유성이', img:'20', code:'T1', zone:'저녁 라운드(18~21시)', spot:'조명 켜진 국화 터널 안', c:'#c9cfe6'},
+  {id:'k1', kind:'국화 속', name:'국화 속 유성이', img:'16'}
+];
+var BONUS = [
+  {id:'b1', kind:'보너스', name:'사진가 유성이', img:'11', how:'내 사진이 숨을 곳으로 채택되면'},
+  {id:'b2', kind:'보너스', name:'단골 유성이', img:'13', how:'참여 가게 QR을 찍으면'}
+];
+var ZONES = SLOTS.filter(function(s){ return s.kind === '구역'; });
+var GRADES = [{n:4, name:'새싹 술래', ico:'🌱'}, {n:7, name:'꽃잎 술래', ico:'🌸'}, {n:10, name:'국화 술래', ico:FL(20)}];
+var SAMPLES = [
+  {id:'p1', who:'국화조아', cap:'연못 위 국화 다리', c:'#c7dde6', likes:41, t:5},
+  {id:'p2', who:'유성맘', cap:'노란 국화 담장', c:'#e3e1c1', likes:33, t:3},
+  {id:'p3', who:'산책러', cap:'분홍 국화 화분 줄', c:'#ecd2d8', likes:27, t:6},
+  {id:'p4', who:'(닉네임 비공개)', cap:'국화 터널 저녁 조명', c:'#c9cbe4', likes:19, t:2},
+  {id:'p5', who:'꽃사슴', cap:'족욕장 옆 국화 정원', c:'#dcd8c4', likes:12, t:1},
+  {id:'p6', who:'하늘색', cap:'정문 국화 아치 하늘', c:'#cfe3f2', likes:8, t:4}
+];
+
+/* ---------- 시각 · 라운드 (운영 시간 10~21시 [확인 필요]) ---------- */
+var OPEN = 10, CLOSE = 21, T0 = Date.now(), BASE = null, FORCE = null;
+if(Q.get('now')){ var hm = Q.get('now').split(':'), d0 = new Date(); d0.setHours(+hm[0] || 0, +hm[1] || 0, 0, 0); BASE = d0.getTime(); }
+function now(){ return new Date(BASE ? BASE + (Date.now() - T0) : Date.now()); }
+function phase(){
+  if(FORCE) return FORCE;
+  var d = now(), h = d.getHours();
+  if(h < OPEN || h >= CLOSE) return 'sleep';
+  if((h - OPEN) % 2 === 0 && d.getMinutes() < 2) return 'round';
+  return 'play';
+}
+function evening(){ var h = now().getHours(); return h >= 18 && h < CLOSE; }
+function nextSwitch(){
+  var d = now(), ks = [10,12,14,16,18,20,21];
+  for(var i = 0; i < ks.length; i++){ var t = new Date(d); t.setHours(ks[i], 0, 0, 0); if(t > d) return {t:t, close: ks[i] === 21}; }
+  return null;
+}
+function left(t){ var s = Math.max(0, Math.floor((t - now()) / 1000)); var p = function(n){ return (n < 10 ? '0' : '') + n; }; return p(Math.floor(s / 3600)) + ':' + p(Math.floor(s % 3600 / 60)) + ':' + p(s % 60); }
+
+/* ---------- 진행 계산 ---------- */
+function has(id){ return !!S.found[id]; }
+function count(){ return SLOTS.filter(function(s){ return has(s.id); }).length; }
+function gradeOf(n){ var g = null; GRADES.forEach(function(x){ if(n >= x.n) g = x; }); return g; }
+function nextGrade(n){ for(var i = 0; i < GRADES.length; i++) if(n < GRADES[i].n) return GRADES[i]; return null; }
+function target(){
+  for(var i = 0; i < ZONES.length; i++) if(!has(ZONES[i].id)) return ZONES[i];
+  if(!has('t1')) return SLOTS[8];
+  return null;
+}
+function slot(id){ return SLOTS.concat(BONUS).filter(function(s){ return s.id === id; })[0]; }
+function nick(){ return S.nick ? S.nick + ' 술래' : '술래'; }
+
+/* ---------- 공통 조각 ---------- */
+function FL(px){ var p=""; for(var i=0;i<14;i++) p+="<ellipse cx=\"20\" cy=\"8\" rx=\"4.2\" ry=\"9\" transform=\"rotate("+(i*360/14)+" 20 20)\" fill=\""+(i%2?"#F5B82E":"#FFCB45")+"\" stroke=\"#E39A10\" stroke-width=\".6\"/>"; return "<svg class=\"fl\" width=\""+px+"\" height=\""+px+"\" viewBox=\"0 0 40 40\" aria-hidden=\"true\">"+p+"<circle cx=\"20\" cy=\"20\" r=\"6\" fill=\"#E08A00\"/></svg>"; }
+function FLS(n,px){ var h=""; for(var i=0;i<n;i++) h+=FL(px); return h; }
+function Y(n){ return 'yu/' + n + (n === 'wave' ? '.jpg' : '.png'); }
+function say(pose, lines, extra){
+  if(!pose) return '<div class="pop" style="margin:16px 0"><div class="bub up">' + lines + (extra ? '<small>' + extra + '</small>' : '') + '</div></div>';
+  return '<div class="say pop"><img src="' + Y(pose) + '" alt="유성이"><div class="bub">' + lines + (extra ? '<small>' + extra + '</small>' : '') + '</div></div>';
+}
+function photo(s, tag, cap){
+  return '<div class="ph" style="--c:' + (s.c || '#cfd9c4') + '">' + (s.src ? '<img class="real" src="' + s.src + '" alt="">' : '') +
+    '<span class="tag">' + (tag || '힌트 사진 자리 · 예시') + '</span><span class="cap">' + esc(cap || s.spot || s.cap) + '</span></div>';
+}
+var LBN = {E:'기존 기능 추정', M:'조합·수동 운영', A:'추가 기능 필요', C:'확인 필요'};
+function labs(list){ return '<div class="labs">' + list.map(function(x){ return '<span class="lb ' + x[1] + '">[' + LBN[x[1]] + '] ' + x[0] + '</span>'; }).join('') + '</div>'; }
+function slotHtml(s, cls){ return '<div class="slot ' + (has(s.id) ? 'got ' : '') + (cls || '') + '" data-slot="' + s.id + '"><em>' + s.kind + '</em><img src="' + Y(s.img) + '" alt="' + (has(s.id) ? s.name : '아직 못 찾은 칸') + '"><span>' + (has(s.id) ? s.name : '???') + '</span></div>'; }
+function toast(t){ var e = document.createElement('div'); e.className = 'toast'; e.textContent = t; document.body.appendChild(e); setTimeout(function(){ e.remove(); }, 2600); }
+function timerHtml(){
+  var n = nextSwitch();
+  if(!n) return '<div class="timer">오늘 숨바꼭질은 끝났어요 <span class="need">운영 시간 확인 필요</span></div>';
+  return '<div class="timer"><span>' + (n.close ? '오늘 숨바꼭질 끝나기까지' : '숨는 자리 바뀌기까지') + '</span><b data-cd="' + n.t.getTime() + '">' + left(n.t) + '</b></div>';
+}
+
+/* ---------- 화면들 ---------- */
+var LAST = null;   // 마지막 스캔 결과 {slot, before, after}
+var V = {};
+
+V.start = function(){
+  return '<div class="stage"><img class="yu rise" src="' + Y('16') + '" alt="국화 사이에서 고개를 내민 유성이"></div>' +
+    '<div class="bubs">' +
+      say('base', '찾았다! 나는 마중 나온 유성이야.') +
+      '<div class="say pop" style="animation-delay:.9s;padding-left:104px;margin-top:-6px"><div class="bub">내 친구들이 국화 속에 꼭꼭 숨었어. 우리 숨바꼭질하자!</div></div>' +
+    '</div>' +
+    '<div class="card fade" style="animation-delay:1.3s"><h3>숨바꼭질 규칙</h3><ol class="rules">' +
+      '<li>힌트 사진 속 장소 근처의 QR을 찾아</li><li>유성이는 2시간마다 숨는 자리를 옮겨</li><li>어디서 멈춰도 술래 등급만큼 응모돼</li></ol></div>' +
+    '<div class="card fade" style="animation-delay:1.5s"><h3>술래 이름 <span class="muted">(선택)</span></h3>' +
+      '<input type="text" id="nick" maxlength="10" placeholder="예: 국화탐정 (안 써도 돼요)" value="' + esc(S.nick || '') + '">' +
+      '<p class="muted" style="margin:8px 0 0">로그인 없이 이 휴대폰에 진행이 저장돼요.</p>' +
+      '<details style="margin-top:12px"><summary style="font-weight:800;color:var(--b);min-height:44px;display:flex;align-items:center;cursor:pointer">다른 기기에서 이어하고 싶다면 (선택)</summary>' +
+        '<label class="f" for="tel">휴대폰 번호 <small>(이어하기·당첨 연락용)</small></label>' +
+        '<input type="tel" id="tel" inputmode="numeric" placeholder="010-0000-0000" autocomplete="off">' +
+        '<label class="chk req"><input type="checkbox" id="agree1"><span><b>[필수] 개인정보 수집·이용 동의</b>휴대폰 번호 · 이어하기와 당첨 안내 목적 · 축제 종료 후 ○일 내 파기 <span class="need">보관 기간 확인 필요</span></span></label>' +
+        '<label class="chk"><input type="checkbox" id="agree2"><span><b>[선택] 광고성 정보 수신 동의</b>참여 가게 혜택 안내. 동의하지 않아도 숨바꼭질과 응모는 똑같이 돼요.</span></label>' +
+      '</details></div>' +
+    '<button class="btn" id="go" style="margin-top:6px">숨바꼭질 시작</button>' +
+    labs([['QR 첫 접속 · 진행 저장','E'],['닉네임 입력','E'],['연락처 · 동의 분리 수집','A'],['보관 기간','C']]);
+};
+V.start.after = function(){
+  $('#go').onclick = function(){
+    var tel = ($('#tel').value || '').replace(/\D/g, '');
+    if(tel && !$('#agree1').checked){ toast('번호를 남기려면 [필수] 동의에 체크해 주세요. 번호 없이도 시작할 수 있어요.'); return; }
+    if(tel && tel.length < 10){ toast('휴대폰 번호를 다시 확인해 주세요.'); return; }
+    S.nick = ($('#nick').value || '').trim().slice(0, 10);
+    S.contact = !!tel; S.adOk = !!(tel && $('#agree2').checked);   // 시안: 번호 자체는 저장하지 않음
+    S.started = Date.now(); S.found.m1 = S.found.m1 || Date.now(); S.found.m2 = S.found.m2 || Date.now();
+    S.seen = Date.now(); save();
+    go('welcome');
+  };
+};
+
+V.welcome = function(){
+  return '<div class="h1 center fade">마중 유성이 2마리가 도감에 들어왔어!</div>' +
+    '<div class="fill" style="justify-content:center">' + slotHtml(SLOTS[0]) + slotHtml(SLOTS[1]) + '<div class="cnt">2/10</div></div>' +
+    say('19', '이제 나머지 친구들을 찾으러 가 볼까?', '힌트 사진 속 장소 근처에 QR이 숨어 있어요') +
+    '<div class="stack"><button class="btn" onclick="location.hash=\'#/hint\'">첫 번째 힌트 보기</button><button class="btn ghost" onclick="location.hash=\'#/dex\'">도감 먼저 보기</button></div>';
+};
+
+V.dex = function(){
+  var n = count(), g = gradeOf(n), ng = nextGrade(n), t = target(), ph = phase();
+  var banner = ph === 'sleep' ? '<div class="note">🌙 지금은 운영 시간이 아니에요. 도감은 언제든 볼 수 있어요.</div>' :
+               ph === 'round' ? '<div class="note">🙈 지금 유성이들이 다 같이 숨는 중이에요. 1~2분 뒤에 새 힌트가 나와요.</div>' : '';
+  return banner +
+    '<div class="prog"><span class="cnt">' + n + '/10</span><div class="bar"><i style="width:' + (n * 10) + '%"></i></div>' +
+      '<span class="badge ' + (g ? 'on' : '') + '">' + (g ? g.ico + ' ' + g.name : '등급 아직 없음') + '</span></div>' +
+    '<div class="next">' + (ng ? ng.ico + ' ' + ng.name + '까지 ' + (ng.n - n) + '마리!' : FL(20) + ' 국화 술래 달성! 모두 찾았어') + '</div>' +
+    '<div class="card"><h3>' + esc(nick()) + '의 유성이 도감</h3><div class="dex">' + SLOTS.map(function(s){ return slotHtml(s); }).join('') + '</div>' +
+      '<div class="dexlegend"><span>마중 2</span><span>구역 6</span><span>시간 한정 1</span><span>국화 속 1</span></div>' +
+      '<div class="bon">' + BONUS.map(function(s){ return slotHtml(s, 'bonus'); }).join('') + '</div>' +
+      '<p class="muted" style="margin:6px 0 0">점선 칸은 보너스예요. 등급 계산에는 들어가지 않아요.</p></div>' +
+    (t ? '<div class="card"><h3>지금 힌트</h3>' + photo(t) + '<p style="margin:10px 0 0;font-weight:800">이 사진 근처에 숨어 있어</p>' + timerHtml() +
+      '<div class="row2" style="margin-top:12px"><a class="btn ghost" href="#/hint">힌트 크게 보기</a><button class="btn blue" data-scan>📷 QR 찍기</button></div></div>'
+       : !has('k1') ? '<div class="card center"><h3>어? 커다란 국화가 흔들리고 있어…</h3><a class="btn" href="#/final">국화 들여다보기</a></div>' : '<div class="card center"><h3>모두 찾았어요!</h3><a class="btn" href="#/map">오늘의 지도 보기</a></div>') +
+    '<a class="btn ghost" href="#/team" style="margin-top:4px">👨‍👩‍👧 가족·친구와 술래팀 만들기 (선택)</a>' +
+    labs([['진행 바 · 도감','E'],['힌트 사진 라운드 교체','M'],['라운드 카운트다운','A']]);
+};
+V.dex.after = function(){
+  document.querySelectorAll('#app .slot').forEach(function(el){
+    el.onclick = function(){ var s = slot(el.dataset.slot); toast(has(s.id) ? s.name + ' · 찾았어요!' : (s.how ? s.how + ' 받아요' : s.kind === '국화 속' ? '9마리를 찾으면 나타나요' : s.kind === '시간 한정' ? '저녁 라운드에만 숨어 있어요' : '아직 숨어 있어요')); };
+  });
+};
+
+V.hint = function(){
+  var t = target();
+  if(!t && !has('k1')) return say('16', '어? 커다란 국화가 흔들리고 있어…') + '<a class="btn" href="#/final">국화 들여다보기</a>';
+  if(!t) return say('base', '이제 숨은 친구가 없어!', '오늘의 지도에서 우리가 숨었던 자리를 볼 수 있어요') + '<a class="btn" href="#/map">오늘의 지도 보기</a>';
+  var more = S.more[t.id];
+  return '<div class="h1">' + (t.kind === '시간 한정' ? '저녁에만 나오는 친구' : '다음 친구는 여기 근처') + '</div>' +
+    photo(t, (S.adoptedSpot && t.id === 'z3' ? '채택 사진 · ' + esc(S.nick || '술래') : '힌트 사진 자리 · 예시')) +
+    '<p class="muted" style="margin:6px 2px 0">사진 제공: ' + (S.adoptedSpot && t.id === 'z3' ? esc(S.nick || '닉네임 비공개') + ' 님 출품 사진' : '운영팀') + '</p>' +
+    say('04', '이 풍경 근처 국화 속에 유성이가 있어.') +
+    (more ? '<div class="note fade">📍 힌트 하나 더: <b>' + esc(t.zone) + '</b> 쪽을 찾아봐!</div>' : '<button class="btn ghost" id="more">힌트 하나 더 (구역 이름 보기)</button>') +
+    timerHtml() +
+    '<button class="btn blue" data-scan style="margin-top:12px">📷 QR 찍기</button>' +
+    '<p class="muted center" style="margin-top:8px">QR은 휴대폰 기본 카메라로 찍으면 돼요</p>' +
+    labs([['힌트 사진 지정','M'],['채택 사진 출품자 표시','M'],['힌트 하나 더','A'],['QR 스캔','E']]);
+};
+V.hint.after = function(){ var m = $('#more'); if(m) m.onclick = function(){ var t = target(); S.more[t.id] = 1; save(); render(); }; };
+
+V.win = function(){
+  var L = LAST || {slot: SLOTS[2], after: count()};
+  var s = L.slot, t = target(), n = count();
+  var final = n >= 9 && !has('k1');
+  return '<div class="stage" style="height:230px"><img class="yu jump" src="' + Y('05') + '" alt="들켜서 놀란 유성이" style="width:200px"><div class="flowers shake">' + FLS(6,64) + '</div></div>' +
+    say(null, '들켰다! 어떻게 알았어?', final ? '' : '다음 친구는 이 사진 속 어딘가에 있을걸?') +
+    '<div class="fill"><div class="slot" id="newSlot"><em>' + s.kind + '</em><img src="' + Y(s.img) + '" alt=""><span>' + s.name + '</span></div>' +
+      '<div><b style="font-size:1.1rem;color:var(--b)">' + s.name + '</b><br><span class="muted">도감 ' + n + '/10 · ' + (gradeOf(n) ? gradeOf(n).name : '등급까지 ' + (4 - n) + '마리') + '</span></div></div>' +
+    (final ? '<div class="note center fade" style="animation-delay:1.6s">어? 커다란 국화가 흔들리고 있어…</div><button class="btn" onclick="location.hash=\'#/final\'">국화 들여다보기</button>' :
+      (t ? '<div class="card"><h3>다음 힌트</h3>' + photo(t) + '</div>' : '') +
+      '<div class="row2"><a class="btn ghost" href="#/dex">도감 보기</a><a class="btn" href="#/hint">다음 힌트 따라가기</a></div>') +
+    labs([['QR 스캔 결과 · 당첨','E'],['도감 칸 채움 연출','A']]);
+};
+V.win.after = function(){
+  setTimeout(function(){ var e = $('#newSlot'); if(e) e.classList.add('go', 'got'); }, 1500);
+  var L = LAST; if(!L) return;
+  var crossed = GRADES.filter(function(g){ return g.n < 10 && L.before < g.n && L.after >= g.n; }).pop();
+  if(crossed && count() < 9) setTimeout(function(){ if(route() === 'win') gradeModal(crossed); }, 2300);
+};
+
+V.miss = function(){
+  var t = target(), s = (LAST && LAST.slot) || ZONES[3];
+  var why = s.kind === '시간 한정' && !evening() ? '이 친구는 저녁 라운드에만 나와.' : '방금 여기 있었는데!';
+  return '<div class="stage" style="height:220px"><img class="yu runout" src="' + Y('18') + '" alt="달아나는 유성이" style="width:170px"><div class="feet">' +
+      [0,1,2,3,4].map(function(i){ return '<span style="animation-delay:' + (0.5 + i * .25) + 's">👣</span>'; }).join('') + '</div></div>' +
+    say(null, '앗, ' + why + ' 발자국이 저쪽으로 이어져 있어.') +
+    (t ? '<div class="note fade" style="animation-delay:1.4s">👣 발자국 방향: <b>' + esc(t.zone) + '</b> 쪽으로 이어져요</div>' +
+      '<div class="card"><h3>따라갈 힌트</h3>' + photo(t) + '</div><a class="btn" href="#/hint">힌트 따라가기</a>' : '<a class="btn" href="#/dex">도감 보기</a>') +
+    labs([['QR 스캔 결과 · 꽝','E'],['발자국 추가 힌트(구역명)','M']]);
+};
+
+V.dup = function(){
+  var rest = 10 - count();
+  return '<div class="stage" style="height:210px"><img class="yu pop" src="' + Y('03') + '" alt="NO 팻말을 든 유성이" style="width:190px"></div>' +
+    say(null, '여긴 벌써 찾았잖아! 다른 친구들은 아직 숨어 있어.') +
+    '<div class="card center"><div class="cnt">아직 ' + rest + '마리 남았어요</div></div>' +
+    '<div class="row2"><a class="btn ghost" href="#/dex">도감 보기</a><a class="btn" href="#/hint">지금 힌트로</a></div>' +
+    labs([['중복 스캔 판별','E']]);
+};
+
+V.photo = function(){
+  return '<div class="h1">숨을 곳 사진 내기</div>' +
+    say('11', '마음에 드는 풍경을 찍어 줘. 인기가 많으면 다음엔 여기 숨을게!') +
+    '<div class="note">사진을 내지 않아도 숨바꼭질과 응모에는 아무 불이익이 없어요.</div>' +
+    '<label class="btn blue" for="file" style="cursor:pointer">📷 사진 찍기 · 고르기</label><input type="file" id="file" accept="image/*" capture="environment" hidden>' +
+    '<div id="pv" style="margin-top:12px"></div>' +
+    '<label class="f" for="pcap">어디인가요? <small>(선택, 20자)</small></label><input type="text" id="pcap" maxlength="20" placeholder="예: 연못 옆 국화 다리">' +
+    '<label class="chk req"><input type="checkbox" id="noface"><span><b>[필수] 사람 얼굴이 나오지 않은 풍경 사진입니다</b>얼굴이 보이는 사진은 운영팀 검수에서 반려돼요.</span></label>' +
+    '<label class="chk"><input type="checkbox" id="shownick" checked><span><b>채택되면 닉네임 공개</b>끄면 "닉네임 비공개"로 보여요.</span></label>' +
+    '<button class="btn" id="send" style="margin-top:14px" disabled>사진 내기</button>' +
+    '<a class="btn ghost" href="#/vote" style="margin-top:10px">사진 안 내고 투표만 하기</a>' +
+    labs([['사진 출품','E'],['얼굴 없음 확인','E'],['운영자 검수','M']]);
+};
+V.photo.after = function(){
+  var img = null, f = $('#file'), ok = function(){ $('#send').disabled = !(img && $('#noface').checked); };
+  f.onchange = function(){
+    var file = f.files[0]; if(!file) return;
+    var r = new FileReader(); r.onload = function(){
+      var im = new Image(); im.onload = function(){   // 저장 용량을 줄이기 위해 긴 변 900px로 축소
+        var k = Math.min(1, 900 / Math.max(im.width, im.height)), c = document.createElement('canvas');
+        c.width = im.width * k; c.height = im.height * k; c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+        img = c.toDataURL('image/jpeg', .78);
+        $('#pv').innerHTML = photo({src: img, c:'#ddd'}, '미리보기', $('#pcap').value || '내 사진'); ok();
+      }; im.src = r.result;
+    }; r.readAsDataURL(file);
+  };
+  $('#noface').onchange = ok;
+  $('#send').onclick = function(){
+    PHOTOS.unshift({id:'u' + Date.now(), who: $('#shownick').checked ? (S.nick || '나') : '(닉네임 비공개)', cap: $('#pcap').value || '내가 찍은 풍경', src: img, likes: 0, t: Date.now(), mine: true, state: '검수 중'});
+    savePhotos(); go('sent');
+  };
+};
+V.sent = function(){
+  return '<div class="stage" style="height:200px"><img class="yu pop" src="' + Y('01') + '" alt="좋아하는 유성이" style="width:190px"></div>' +
+    say(null, '여기 예쁘다! 투표에서 인기가 많으면 다음 숨을 곳이 될 거야.') +
+    '<div class="note">운영팀이 확인한 뒤 투표 목록에 올라가요. (보통 라운드 안에 확인)</div>' +
+    '<div class="row2"><a class="btn ghost" href="#/dex">도감으로</a><a class="btn" href="#/vote">투표 보러 가기</a></div>' +
+    labs([['출품 완료','E'],['검수 대기 표시','M']]);
+};
+
+var SORT = 'hot';
+V.vote = function(){
+  var n = nextSwitch();
+  var list = SAMPLES.concat(PHOTOS).map(function(p){ return Object.assign({}, p, {likes: p.likes + (S.votes[p.id] ? 1 : 0)}); });
+  list.sort(SORT === 'hot' ? function(a, b){ return b.likes - a.likes; } : function(a, b){ return b.t - a.t; });
+  return '<div class="h1">유성이가 다음에 숨을 곳을 골라 줘!</div>' +
+    (n && !n.close ? '<div class="timer"><span>이번 투표 마감까지</span><b data-cd="' + n.t.getTime() + '">' + left(n.t) + '</b></div>' : '<div class="timer">오늘 투표는 끝났어요</div>') +
+    '<a class="btn blue" href="#/photo" style="margin-top:12px">📷 내 사진도 내기 (선택)</a>' +
+    '<div class="sortbar"><button data-sort="hot" class="' + (SORT === 'hot' ? 'on' : '') + '">인기순</button><button data-sort="new" class="' + (SORT === 'new' ? 'on' : '') + '">최신순</button></div>' +
+    '<div class="vg">' + list.map(function(p){
+      return '<div class="vc">' + photo(p, p.mine ? '내 사진 · ' + p.state : '출품 사진 · 예시', p.cap) +
+        '<div class="act"><span class="who">' + esc(p.who) + '</span>' +
+        (p.mine ? '<span class="muted" style="font-size:.75rem;padding:12px 4px">검수 중</span>' : '<button class="heart ' + (S.votes[p.id] ? 'on' : '') + '" data-v="' + p.id + '" aria-label="좋아요"><i>❤️</i>' + p.likes + '</button>') +
+        '</div>' + (p.mine ? '' : '<div style="padding:0 6px 4px;text-align:right"><button class="rep" data-rep="' + p.id + '">신고</button></div>') + '</div>';
+    }).join('') + '</div>' +
+    '<p class="muted center" style="margin-top:14px"><a href="#/adopt" style="color:var(--b);font-weight:700">채택 알림은 이렇게 와요 →</a></p>' +
+    labs([['좋아요 투표','E'],['정렬','E'],['신고','E'],['채택 결정·공지','M']]);
+};
+V.vote.after = function(){
+  document.querySelectorAll('[data-sort]').forEach(function(b){ b.onclick = function(){ SORT = b.dataset.sort; render(); }; });
+  document.querySelectorAll('[data-v]').forEach(function(b){ b.onclick = function(){
+    var id = b.dataset.v, first = !Object.keys(S.votes).length;
+    if(S.votes[id]) delete S.votes[id]; else S.votes[id] = 1; save(); render();
+    if(S.votes[id] && first) setTimeout(function(){ sheet('<div class="center">' + say('08', '좋아, 거기 괜찮다!', '결과는 라운드가 바뀔 때 알려 줄게.') + '<button class="btn" data-close>계속 보기</button></div>'); }, 200);
+  }; });
+  document.querySelectorAll('[data-rep]').forEach(function(b){ b.onclick = function(){
+    sheet('<h4>이 사진을 신고할까요?</h4><div class="stack">' + ['사람 얼굴이 보여요','풍경 사진이 아니에요','부적절한 내용이에요'].map(function(x){ return '<button class="btn ghost" data-close data-repd>' + x + '</button>'; }).join('') + '<button class="btn" data-close style="background:var(--g);box-shadow:none">취소</button></div>');
+    document.querySelectorAll('[data-repd]').forEach(function(x){ x.addEventListener('click', function(){ toast('신고가 접수됐어요. 운영팀이 확인할게요.'); }); });
+  }; });
+};
+
+V.adopt = function(){
+  if(!has('b1')){ S.found.b1 = Date.now(); S.adoptedSpot = 1; save(); }
+  return '<div class="stage" style="height:220px"><img class="yu jump" src="' + Y('01') + '" alt="기뻐하는 유성이" style="width:200px"></div>' +
+    say(null, '네 사진 속 그 자리로 이사 왔어! 벌써 <b>37</b>명이 나를 찾았어.') +
+    '<div class="note" style="background:#f3f3f3">기능이 없을 때 대체 문구: "네 사진 덕분에 친구들이 나를 찾으러 오고 있어"</div>' +
+    '<div class="fill"><div class="slot bonus got go"><em>보너스</em><img src="' + Y('11') + '" alt=""><span>사진가 유성이</span></div><div><b style="color:var(--b);font-size:1.1rem">보너스 칸 획득!</b><br><span class="muted">사진가 유성이가 도감에 들어왔어요</span></div></div>' +
+    '<div class="row2"><a class="btn ghost" href="#/dex">도감 보기</a><a class="btn" href="#/hint">채택된 힌트 보기</a></div>' +
+    labs([['채택 알림','A'],['"○명이 찾았어" 집계','A'],['채택 공지(대안)','M'],['보너스 칸 지급','A']]);
+};
+
+V.shop = function(){
+  var t = target(); var nextS = t ? ZONES[(ZONES.indexOf(t) + 1) % 6] : ZONES[0];
+  if(!has('b2')){ S.found.b2 = Date.now(); save(); }
+  return '<div class="stage" style="height:220px"><img class="yu pop" src="' + Y('13') + '" alt="간식 바구니를 든 유성이" style="width:220px"></div>' +
+    say(null, '배고파서 잠깐 간식 먹으러 왔어. 쉿, 다음에 숨을 곳 하나만 먼저 알려 줄게.') +
+    '<div class="card"><h3>🤫 다음 라운드 미리보기</h3>' + photo(nextS, '다음 라운드 힌트 · 예시') + '</div>' +
+    '<div class="fill"><div class="slot bonus got go"><em>보너스</em><img src="' + Y('13') + '" alt=""><span>단골 유성이</span></div><div><b style="color:var(--b)">단골 유성이 획득!</b><br><span class="muted">가게 QR만 찍으면 돼요. 물건을 사지 않아도 괜찮아요.</span></div></div>' +
+    '<div class="card" style="border:2px dashed var(--line);box-shadow:none"><h3>이 가게 혜택</h3><p class="muted" style="margin:0">[상인 협의 혜택 — 확인 필요]</p></div>' +
+    '<a class="btn" href="#/dex">도감으로 돌아가기</a>' +
+    labs([['가게 QR 미리보기','A'],['보너스 칸 지급','A'],['상인 혜택','C']]);
+};
+
+V.final = function(){
+  if(!has('k1')){ S.found.k1 = Date.now(); save(); }
+  return '<div class="stage" style="height:270px"><div class="flowers bloom">' + FLS(5,96) + '</div><img class="yu rise" src="' + Y('16') + '" alt="국화 속에서 나온 유성이" style="width:250px;animation-delay:1s"></div>' +
+    say(null, '다 찾았구나… 그럼 이제 나도 나갈게.') +
+    '<div class="modal" style="background:#fff;margin:10px 0;box-shadow:0 1px 0 var(--line)"><div class="medal">' + FL(24) + ' 국화 술래 달성</div><p style="font-weight:800;margin:8px 0 2px">10/10 · 유성이를 모두 찾았어요</p><p class="muted" style="margin:0">국화 술래 등급으로 자동 응모가 완료됐어요.</p></div>' +
+    '<div class="row2"><a class="btn ghost" href="#/map">오늘의 지도 보기</a><button class="btn" id="share">친구에게 공유</button></div>' +
+    labs([['국화 속 유성이 등장 연출','A'],['자동 응모','E'],['공유','E']]);
+};
+V.final.after = function(){ $('#share').onclick = share; };
+function share(){
+  var data = {title:'국화 속에 숨은 유성이를 찾아라', text:'나는 유성이를 ' + count() + '마리 찾았어! 유림공원에서 같이 숨바꼭질하자 🌼', url: location.origin + location.pathname};
+  if(navigator.share) navigator.share(data).catch(function(){});
+  else { try{ navigator.clipboard.writeText(data.text + ' ' + data.url); toast('링크를 복사했어요'); }catch(e){ toast(data.url); } }
+}
+
+V.map = function(){
+  var pins = [[22,30,'z1'],[52,46,'z2'],[72,28,'z3'],[34,66,'z4'],[66,70,'z5'],[84,52,'z6']];
+  return '<div class="h1">오늘의 지도</div>' +
+    say('base', '오늘 우리가 숨었던 자리들이야.', '손님들이 찍어 준 사진으로 만든 지도야.') +
+    '<div class="map"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">' +
+      '<path d="M0 82 C25 74 40 92 62 84 S90 76 100 80 L100 100 L0 100Z" fill="#cfe2ef"/>' +
+      '<ellipse cx="55" cy="56" rx="17" ry="11" fill="#bcd9ec"/>' +
+      '<path d="M8 12 C30 22 40 40 52 46 S72 34 92 20 M30 90 C34 70 40 60 52 46 S70 66 88 90" stroke="#f3ead6" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+      '<rect x="4" y="4" width="16" height="8" rx="2" fill="#fff" opacity=".85"/><text x="12" y="9.6" font-size="3.6" text-anchor="middle" fill="#1F4E9C" font-weight="700">정문</text>' +
+    '</svg>' +
+    pins.map(function(p, i){ var s = slot(p[2]); return '<button class="pin ' + (has(s.id) ? 'me' : '') + '" style="left:' + p[0] + '%;top:' + p[1] + '%" data-pin="' + s.id + '" aria-label="' + esc(s.spot) + '"><b><span>' + (i + 1) + '</span></b></button>'; }).join('') +
+    '<div class="maptag">[유림공원 약도 자리 — 실제 약도로 교체 필요] · 파란 핀 = 내가 찾은 곳</div></div>' +
+    '<div id="pinInfo" class="card"><h3>핀을 눌러 보세요</h3><p class="muted" style="margin:0">그 자리에 걸렸던 힌트 사진이 나와요.</p></div>' +
+    '<div class="note" style="background:#f3f3f3;font-weight:600">자동 생성 기능이 없을 때: 운영자가 하루 마감 후 이 지도를 이미지 1장으로 만들어 이 화면에 올려요.</div>' +
+    labs([['오늘의 지도 자동 생성','A'],['마감 후 이미지 게시(대안)','M'],['유림공원 약도','C']]);
+};
+V.map.after = function(){
+  document.querySelectorAll('[data-pin]').forEach(function(b){ b.onclick = function(){
+    var s = slot(b.dataset.pin);
+    $('#pinInfo').innerHTML = '<h3>' + esc(s.zone) + '</h3>' + photo(s) + '<p class="muted" style="margin:8px 0 0">' + (has(s.id) ? '✅ ' + s.name + '를 여기서 찾았어요' : '여기 숨었던 친구는 아직 못 찾았어요') + '</p>';
+  }; });
+};
+
+V.round = function(){
+  return '<div class="stage" style="height:230px"><img class="yu pop" src="' + Y('12') + '" alt="숨는 중인 유성이" style="width:200px"></div>' +
+    say(null, '지금 다 같이 숨는 중! 눈 감고 열까지 세어 줘.') +
+    '<div class="card center"><div class="big-emoji" id="ten">🙈</div><p class="muted" style="margin:6px 0 0">1~2분 뒤에 새 힌트 사진이 나와요</p></div>' +
+    '<a class="btn" href="#/dex">도감 보면서 기다리기</a>' + labs([['라운드 교체 안내','M']]);
+};
+V.round.after = function(){ var i = 0, e = $('#ten'); var iv = setInterval(function(){ if(!document.body.contains(e)){ clearInterval(iv); return; } i++; e.textContent = i <= 10 ? i : '🙉'; if(i > 10) clearInterval(iv); }, 700); };
+V.sleep = function(){
+  return '<div class="stage" style="height:230px"><img class="yu pop" src="' + Y('09') + '" alt="자고 있는 유성이" style="width:230px"></div>' +
+    say(null, '유성이들은 지금 자는 중이야. 내일 또 숨바꼭질하자!') +
+    '<div class="card"><h3>운영 시간</h3><p style="margin:0;font-weight:700">매일 10:00 ~ 21:00 <span class="need">확인 필요</span></p><p class="muted" style="margin:6px 0 0">도감과 오늘의 지도는 언제든 볼 수 있어요.</p></div>' +
+    '<a class="btn" href="#/dex">내 도감 보기</a>' + labs([['운영 시간 외 안내','M'],['운영 시간','C']]);
+};
+V.error = function(){
+  return '<div class="stage" style="height:210px"><img class="yu pop" src="' + Y('04') + '" alt="갸웃하는 유성이" style="width:190px"></div>' +
+    say(null, '어라, QR을 잘 못 읽었어. 다시 한 번 찍어 줄래?') +
+    '<button class="btn" onclick="location.reload()">다시 시도</button>' +
+    '<div class="card"><h3>계속 안 되면</h3><p style="margin:0;font-weight:700">운영 부스로 와 주세요 · 정문 안내소 옆 <span class="need">위치 확인 필요</span></p></div>' +
+    '<a class="btn ghost" href="#/dex">도감으로</a>' + labs([['잘못된 QR · 네트워크 오류','E'],['운영 부스 위치','C']]);
+};
+
+V.back = function(){
+  var rest = 10 - count();
+  return '<div class="stage" style="height:220px"><img class="yu pop" src="' + Y('wave') + '" alt="손 흔드는 유성이" style="width:200px;border-radius:50%;background:#fff"></div>' +
+    say(null, '또 왔구나! 아직 <b>' + rest + '</b>마리가 숨어 있어.') +
+    '<a class="btn" href="#/hint">지금 힌트 보기</a>' +
+    '<div class="card" style="margin-top:16px"><h3>안내 메시지 예시 <span class="muted">(수신 동의자만)</span></h3>' +
+      '<div class="msg"><b>정보성</b><br>[유성국화축제] 유성이 숨는 자리가 30분 뒤에 바뀌어요.</div>' +
+      '<div class="msg ad"><b>광고성 (상점 혜택 포함 시)</b><br>(광고) [유성국화축제] 단골 유성이가 ○○분식에서 기다려요. 오늘 QR 찍으면 [혜택 확인 필요]<br><span class="muted">무료 수신거부 080-000-0000 <span class="need">번호 확인 필요</span> · 21시~다음 날 8시에는 보내지 않아요</span></div>' +
+      '<div class="msg"><b>다음 시즌 예고</b><br>봄에는 다른 꽃 속에 숨어 있을게!</div></div>' +
+    labs([['이어하기(기기 저장)','E'],['다른 기기 이어하기','A'],['문자 발송','A']]);
+};
+
+V.team = function(){
+  if(!S.team){ S.team = {code: Math.random().toString(36).slice(2, 6).toUpperCase(), mates: [S.nick || '나']}; save(); }
+  var tm = S.team;
+  return '<div class="h1">술래팀 (선택)</div>' +
+    say('06', '같이 찾으면 더 빨라! 한 명이 쉬어도 팀 도감은 그대로야.') +
+    '<div class="card center"><p class="muted" style="margin:0">우리 팀 코드</p><div style="font-size:2.2rem;font-weight:900;letter-spacing:.2em;color:var(--b)">' + tm.code + '</div>' +
+      '<button class="btn" id="tshare">팀 코드 보내기</button></div>' +
+    '<div class="card"><h3>팀원 (2~4명)</h3>' + [0,1,2,3].map(function(i){ return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:' + (i ? '1px dashed var(--line)' : '0') + '"><span class="badge ' + (tm.mates[i] ? 'on' : '') + '">' + (i + 1) + '</span><b>' + (tm.mates[i] ? esc(tm.mates[i]) : '<span class="muted">빈 자리</span>') + '</b></div>'; }).join('') + '</div>' +
+    '<div class="card"><h3>오늘의 팀 현황</h3><p style="margin:0;font-weight:700">🌸 지금 <b>12</b>팀이 꽃잎 술래 달성 <span class="muted">(예시)</span></p></div>' +
+    '<p class="muted">팀 기능이 없어도 숨바꼭질은 혼자서 똑같이 할 수 있어요.</p>' +
+    '<a class="btn ghost" href="#/dex">도감으로</a>' + labs([['팀 코드 · 팀 도감','A'],['팀 현황 집계','A']]);
+};
+V.team.after = function(){ $('#tshare').onclick = function(){ var t = '유성이 숨바꼭질 술래팀 코드: ' + S.team.code; if(navigator.share) navigator.share({text: t, url: location.origin + location.pathname}).catch(function(){}); else { try{ navigator.clipboard.writeText(t); }catch(e){} toast('팀 코드를 복사했어요'); } }; };
+
+/* 운영자 화면 */
+var QUEUE = null;
+V.admin = function(){
+  QUEUE = QUEUE || [{cap:'연못 위 국화 다리', c:'#c7dde6', who:'국화조아'}, {cap:'사람 많은 포토존', c:'#ecd2d8', who:'익명', face:1}, {cap:'노란 국화 담장', c:'#e3e1c1', who:'유성맘'}].concat(PHOTOS.map(function(p){ return {cap:p.cap, src:p.src, who:p.who}; }));
+  var rounds = ['10:00','12:00','14:00','16:00','18:00','20:00'];
+  return '<div class="h1">운영자 화면</div><p class="muted" style="margin:0 0 6px">운영 인력 1~2명 기준 · 한 화면에서 끝내기</p>' +
+    '<div class="card"><h3>① 출품 사진 검수</h3><p class="muted" style="margin:0">오른쪽으로 밀면 승인, 왼쪽은 반려 (얼굴 보이면 반려)</p>' +
+      '<div class="swipe" id="sw"></div><div class="row2"><button class="btn ghost" id="rej">✕ 반려</button><button class="btn blue" id="acc">✓ 승인</button></div></div>' +
+    '<div class="card"><h3>② 라운드 힌트 사진 지정</h3><table class="t"><tr><th>라운드</th><th>숨는 자리 (힌트 사진)</th></tr>' +
+      rounds.map(function(r, i){ return '<tr><td><b>' + r + '</b></td><td><select>' + ZONES.map(function(z, j){ return '<option' + (j === i % 6 ? ' selected' : '') + '>' + z.spot + '</option>'; }).join('') + '<option>투표 1위 출품 사진</option></select></td></tr>'; }).join('') + '</table></div>' +
+    '<div class="card"><h3>③ 당첨 QR 순환 확인</h3><table class="t"><tr><th>QR</th><th>지금 상태</th></tr>' +
+      ZONES.concat([SLOTS[8]]).map(function(z, i){ var on = i === (Math.max(0, now().getHours() - OPEN) >> 1) % 6 || (z.id === 't1' && evening()); return '<tr><td>' + z.code + ' · ' + esc(z.zone) + '</td><td>' + (on ? '<b style="color:var(--ok)">● 유성이 있음</b>' : '<span class="muted">발자국</span>') + '</td></tr>'; }).join('') + '</table></div>' +
+    labs([['출품 검수','M'],['라운드 힌트 지정','M'],['당첨 QR 순환','E']]);
+};
+V.admin.after = function(){
+  var sw = $('#sw');
+  function draw(){
+    if(!QUEUE.length){ sw.innerHTML = '<div class="card center" style="margin:0">검수할 사진이 없어요 ✨</div>'; return; }
+    var p = QUEUE[0];
+    sw.innerHTML = '<div class="sc" id="sc">' + photo(p, p.face ? '⚠ 얼굴 포함 의심' : '검수 대기 ' + QUEUE.length + '장', p.cap) + '<p style="margin:8px 4px 0;font-weight:700">' + esc(p.who) + '</p><span class="stamp okk">승인</span><span class="stamp no">반려</span></div>';
+    var sc = $('#sc'), x0 = null, dx = 0;
+    sc.addEventListener('pointerdown', function(e){ x0 = e.clientX; sc.style.transition = 'none'; sc.setPointerCapture(e.pointerId); });
+    sc.addEventListener('pointermove', function(e){ if(x0 == null) return; dx = e.clientX - x0; sc.style.transform = 'translateX(' + dx + 'px) rotate(' + dx / 20 + 'deg)'; $('.okk', sc).style.opacity = dx > 0 ? Math.min(1, dx / 80) : 0; $('.no', sc).style.opacity = dx < 0 ? Math.min(1, -dx / 80) : 0; });
+    sc.addEventListener('pointerup', function(){ x0 = null; sc.style.transition = ''; if(Math.abs(dx) > 90) decide(dx > 0); else { sc.style.transform = ''; $('.okk', sc).style.opacity = $('.no', sc).style.opacity = 0; } dx = 0; });
+  }
+  function decide(ok){ var sc = $('#sc'); if(!sc) return; sc.style.transform = 'translateX(' + (ok ? 140 : -140) + '%) rotate(' + (ok ? 18 : -18) + 'deg)'; sc.style.opacity = 0; toast(ok ? '승인 · 투표 목록에 올렸어요' : '반려했어요'); setTimeout(function(){ QUEUE.shift(); draw(); }, 280); }
+  $('#acc').onclick = function(){ decide(true); }; $('#rej').onclick = function(){ decide(false); };
+  draw();
+};
+
+/* ---------- 등급 모달 (S9) ---------- */
+function gradeModal(g){
+  var n = count();
+  var pose = g.n === 4 ? '19' : '06';
+  layer('<div class="dim"><div class="modal pop"><img class="yu" src="' + Y(pose) + '" alt="축하하는 유성이">' +
+    '<div class="medal">' + g.ico + ' ' + g.name + '</div>' +
+    '<div class="bub" style="margin:10px 0 14px;text-align:left">벌써 ' + n + '마리! 너는 이제 ' + g.name + '야.<small>여기서 멈춰도 응모는 완료됐어.</small></div>' +
+    '<div class="row2"><button class="btn ghost" data-stop>오늘은 여기까지</button><button class="btn" data-close>계속 찾기</button></div>' +
+    labs([['등급 달성 · 응모','E']]) + '</div></div>');
+  $('[data-stop]').onclick = function(){ closeLayer(); layer('<div class="dim"><div class="modal pop"><img class="yu" src="' + Y('09') + '" alt="">' +
+    '<div class="bub" style="text-align:left;margin:10px 0 14px">오늘 재밌었어! 응모는 벌써 끝났으니 걱정 마.<small>' + (S.contact ? '다음에 오면 이어서 찾을 수 있어.' : '이 휴대폰으로 다시 오면 이어서 찾을 수 있어.') + '</small></div>' +
+    '<button class="btn" data-close>알겠어!</button></div></div>'); };
+}
+
+/* ---------- 레이어 · 시트 ---------- */
+function layer(h){ var L = $('#layer'); L.innerHTML = h; L.querySelectorAll('[data-close]').forEach(function(b){ b.addEventListener('click', closeLayer); }); var d = $('.dim', L); if(d) d.addEventListener('click', function(e){ if(e.target === d) closeLayer(); }); }
+function closeLayer(){ $('#layer').innerHTML = ''; }
+function sheet(h){ layer('<div class="dim sheetdim"><div class="sheet fade">' + h + '</div></div>'); }
+
+function scanSheet(){
+  var t = target(), other = ZONES.filter(function(z){ return !has(z.id) && (!t || z.id !== t.id); })[0], done = SLOTS.filter(function(s){ return s.code && has(s.id); })[0];
+  sheet('<h4>📷 QR 찍기 (시연)</h4><p class="muted" style="margin:-4px 0 10px">실제로는 휴대폰 카메라로 현장 QR을 찍으면 이 화면들이 열려요.</p><div class="list">' +
+    (t ? '<button data-code="' + t.code + '"><b>힌트 자리 QR</b><br>→ 당첨</button>' : '') +
+    (other ? '<button data-code="' + other.code + '"><b>엉뚱한 자리 QR</b><br>→ 발자국</button>' : '') +
+    (done ? '<button data-code="' + done.code + '"><b>이미 찾은 QR</b><br>→ 벌써 찾았잖아</button>' : '') +
+    '<button data-code="SHOP"><b>가게 QR</b><br>→ 단골 유성이</button>' +
+    '<button data-code="XX"><b>망가진 QR</b><br>→ 오류 안내</button></div>' +
+    '<button class="btn" data-close style="margin-top:12px;background:var(--g);box-shadow:none">닫기</button>');
+  document.querySelectorAll('[data-code]').forEach(function(b){ b.onclick = function(){ closeLayer(); if(b.dataset.code === 'T1') FORCE = null; scan(b.dataset.code); }; });
+}
+
+function scan(code){
+  code = String(code || '').toUpperCase();
+  if(!S.started){ S.pending = code; save(); return go('start'); }
+  if(code === 'SHOP' || /^S\d+$/.test(code)) return go('shop');
+  var ph = phase();
+  if(ph === 'sleep') return go('sleep');
+  if(ph === 'round') return go('round');
+  var s = SLOTS.filter(function(x){ return x.code === code; })[0];
+  if(!s) return go('error');
+  if(has(s.id)){ LAST = {slot: s}; return go('dup'); }
+  var t = target();
+  var win = s.kind === '시간 한정' ? (evening() || DEMO_EVE) : (t && t.id === s.id);
+  if(!win){ LAST = {slot: s}; return go('miss'); }
+  var before = count(); S.found[s.id] = Date.now(); save();
+  LAST = {slot: s, before: before, after: count()};
+  go('win');
+}
+var DEMO_EVE = false;
+
+/* ---------- 시연 메뉴 ---------- */
+var SCREENS = [['S0','start','첫 스캔 온보딩'],['S1','dex','홈 · 도감'],['S2','win','스캔 · 당첨'],['S3','miss','스캔 · 꽝(발자국)'],['S4','dup','이미 찾은 QR'],['S5','hint','힌트 사진 상세'],['S6','photo','사진 출품'],['S7','vote','투표'],['S8','adopt','사진 채택 알림'],['S9','grade','술래 등급 모달'],['S10','shop','가게 QR'],['S11','final','국화 속 유성이'],['S12','map','오늘의 지도'],['S13','round','라운드 교체 중'],['S13','sleep','운영 시간 외'],['S13','error','QR 오류'],['S14','back','이어하기 · 메시지'],['S15','team','술래팀'],['운영','admin','운영자 화면']];
+$('#fab').onclick = function(){
+  sheet('<h4>시연 메뉴 · 화면 바로가기</h4><div class="list">' + SCREENS.map(function(s){ return '<button data-go="' + s[1] + '"><b>' + s[0] + '</b> ' + s[2] + '</button>'; }).join('') + '</div>' +
+    '<label class="chk" style="margin-top:12px"><input type="checkbox" id="labT"' + (S.labels ? ' checked' : '') + '><span><b>기능 라벨 보기</b>화면마다 [기존 기능 추정] [조합·수동 운영] [추가 기능 필요] 표시</span></label>' +
+    '<div class="row2" style="margin-top:10px"><button class="btn ghost" id="fill7">7마리까지 채우기</button><button class="btn ghost" id="reset">처음부터 다시</button></div>' +
+    '<button class="btn" data-close style="margin-top:10px;background:var(--g);box-shadow:none">닫기</button>');
+  document.querySelectorAll('[data-go]').forEach(function(b){ b.onclick = function(){
+    closeLayer(); var r = b.dataset.go;
+    if(r === 'grade'){ var g = gradeOf(count()) || GRADES[0]; if(g.n === 10) g = GRADES[1]; return gradeModal(g); }
+    if(r === 'win' && !LAST){ var t = target() || ZONES[0]; LAST = {slot: t, before: count(), after: count()}; }
+    if(r === 'final' && count() < 9) return toast('9마리를 찾으면 열려요 · [7마리까지 채우기] 후 스캔해 보세요');
+    if(!S.started && r !== 'start' && r !== 'admin'){ S.started = Date.now(); S.found.m1 = S.found.m2 = Date.now(); save(); }
+    go(r);
+  }; });
+  $('#labT').onchange = function(){ S.labels = this.checked; save(); document.documentElement.classList.toggle('lab', S.labels); };
+  $('#fill7').onclick = function(){ S.started = S.started || Date.now(); ['m1','m2','z1','z2','z3','z4','z5'].forEach(function(id){ S.found[id] = S.found[id] || Date.now(); }); DEMO_EVE = true; save(); closeLayer(); go('dex'); toast('7마리 · 꽃잎 술래 상태예요. 남은 칸을 스캔해 보세요'); };
+  $('#reset').onclick = function(){ try{ localStorage.removeItem(KEY); localStorage.removeItem(KEY + '-ph'); }catch(e){} location.href = location.pathname; };
+};
+
+/* ---------- 라우터 ---------- */
+var TABBED = {dex:1, hint:1, vote:1, map:1, photo:1, team:1, sent:1};
+function route(){ return (location.hash.replace(/^#\/?/, '') || '').split('?')[0]; }
+function go(r){ if(route() === r) render(); else location.hash = '#/' + r; }
+function render(){
+  var r = route();
+  if(!V[r]){ r = S.started ? 'dex' : 'start'; history.replaceState(null, '', location.pathname + location.search + '#/' + r); }
+  if(r !== 'start' && r !== 'admin' && !S.started){ r = 'start'; history.replaceState(null, '', location.pathname + location.search + '#/start'); }
+  closeLayer();
+  document.body.classList.toggle('adm', r === 'admin');
+  $('#app').innerHTML = V[r]();
+  if(V[r].after) V[r].after();
+  $('#tabs').classList.toggle('hide', !TABBED[r]);
+  var tabKey = r === 'photo' || r === 'sent' ? 'vote' : r;
+  document.querySelectorAll('#tabs a').forEach(function(a){ a.classList.toggle('on', a.dataset.t === tabKey); });
+  document.querySelectorAll('[data-scan]').forEach(function(b){ b.onclick = scanSheet; });
+  window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', render);
+setInterval(function(){ document.querySelectorAll('[data-cd]').forEach(function(e){ e.textContent = left(new Date(+e.dataset.cd)); }); }, 1000);
+
+/* 큰 글씨 */
+function applyBig(){ document.documentElement.classList.toggle('big', !!S.big); $('#bigBtn').setAttribute('aria-pressed', S.big ? 'true' : 'false'); }
+$('#bigBtn').onclick = function(){ S.big = !S.big; save(); applyBig(); };
+applyBig();
+if(Q.get('labels') === '1') S.labels = true;
+document.documentElement.classList.toggle('lab', !!S.labels);
+
+/* ---------- 시작 ---------- */
+var qr = Q.get('qr');
+if(qr){ history.replaceState(null, '', location.pathname + (Q.get('now') ? '?now=' + Q.get('now') : '')); render(); scan(qr); }
+else if(S.started && S.seen && Date.now() - S.seen > 30 * 60 * 1000 && !location.hash){ S.seen = Date.now(); save(); location.hash = '#/back'; render(); }
+else { if(S.started){ S.seen = Date.now(); save(); } render(); }
+
+/* 온보딩 직후 대기 중이던 QR 처리 */
+var _go = V.welcome.after;
+V.welcome.after = function(){ if(S.pending){ var c = S.pending; delete S.pending; save(); setTimeout(function(){ scan(c); }, 1400); } if(_go) _go(); };
+})();
+</script>
+</body>
+</html>
