@@ -86,8 +86,12 @@ a{color:inherit}
 .all small{display:block;font-weight:600;font-size:12px;color:var(--sub)}
 .foot{font-size:11.5px;color:var(--sub);text-align:center;margin-top:16px;line-height:1.6}
 /* 첫 진입 연출: 여권 표지가 휘리릭 넘어가며 '입국' 도장이 찍히고 화면이 열림 */
-#intro{position:fixed;inset:0;z-index:50;background:var(--cream);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .5s ease,transform .5s ease}
-#intro.out{opacity:0;transform:scale(1.12);pointer-events:none}
+#intro{position:fixed;inset:0;z-index:50;background:var(--cream);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px 24px calc(28px + env(safe-area-inset-bottom));transition:transform .65s cubic-bezier(.55,0,.25,1);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+#intro.out{transform:translateY(-105%);pointer-events:none}
+.enter{width:100%;max-width:320px;border:0;border-radius:18px;background:var(--mustard);color:var(--char);font:inherit;font-size:17px;font-weight:900;padding:16px;cursor:pointer;box-shadow:0 6px 16px rgba(138,90,18,.25);animation:rise .6s .25s cubic-bezier(.2,.9,.3,1.2) both}
+.enter:active{transform:translateY(2px)}
+#intro.open .enter{opacity:0;transform:translateY(20px);transition:.25s;animation:none}
+@keyframes rise{from{opacity:0;transform:translateY(60px)}to{opacity:1;transform:none}}
 #intro .k{font-size:13px;font-weight:800;color:#B98418;letter-spacing:.04em}
 .ib{position:relative;width:min(250px,64vw);aspect-ratio:300/440;perspective:1400px}
 .pg,.fc{position:absolute;inset:0;border-radius:12px 20px 20px 12px}
@@ -118,13 +122,11 @@ body.lock{overflow:hidden}
     <div class="pg"><small>YUSEONG · DAEJEON</small><div class="sx"><span>WELCOME</span><b>입국</b><span>유성</span></div><p>오늘, 유성에<br>입국했습니다.</p></div>
     <div class="fc"><div class="fr"><div class="yd">YUSEONG · DAEJEON</div><div class="emb" id="introEmb"></div><div><h2>유성 국화 여권</h2><div class="en">CHRYSANTHEMUM PASSPORT</div></div><div class="yd" style="font-style:normal;letter-spacing:.1em">스캔 1회 = 도장 1개</div></div></div>
   </div>
-  <p class="tap">화면을 누르면 바로 열려요</p>
+  <button class="enter" id="enterBtn" type="button">여권으로 들어가기</button>
 </div>
 <script>
-/* 사이트 안에서 이동해 온 경우(다른 화면에서 '둘러보기'로 돌아옴)는 연출 생략. QR·주소로 처음 들어오면 매번 보여 줌 */
-(function(){ var r = document.referrer, same = false; try{ same = r && new URL(r).origin === location.origin; }catch(e){}
-  try{ var nv = performance.getEntriesByType('navigation')[0]; if(nv && nv.type === 'reload') same = false; }catch(e){}  /* 새로고침하면 다시 보여 줌 */
-  if(same){ var el = document.getElementById('intro'); el.parentNode.removeChild(el); document.body.classList.remove('lock'); } })();
+/* 들어올 때마다 표지를 보여 줌. 사이트 안 '둘러보기로 돌아가기' 링크(?intro=0)만 생략 */
+if(new URLSearchParams(location.search).get('intro') === '0'){ var el0 = document.getElementById('intro'); el0.parentNode.removeChild(el0); document.body.classList.remove('lock'); }
 </script>
 <header class="hero"><div class="in">
   <div class="brand" id="logo"></div>
@@ -205,16 +207,17 @@ body.lock{overflow:hidden}
 <script>
 (function(){
   var YP = window.YP;
-  /* 첫 진입 연출: 0.7초 표지 → 표지가 넘어가며 '입국' 도장 → 2.4초에 화면이 커지며 사라짐. 누르면 바로 진행 */
+  /* 첫 진입 연출: '여권으로 들어가기'를 누르면 표지가 넘어가며 '입국' 도장 → 화면 전체가 위로 올라가며 내용이 나옴.
+     연출 중에 한 번 더 누르면 바로 올라감 */
   var intro = document.getElementById('intro');
   if(intro){
     document.getElementById('introEmb').innerHTML = YP.logo(92);
-    var stage = 0, t1, t2;
-    var finish = function(){ if(stage === 2) return; stage = 2; clearTimeout(t1); clearTimeout(t2); intro.classList.add('open', 'out'); document.body.classList.remove('lock');
-      setTimeout(function(){ if(intro.parentNode) intro.parentNode.removeChild(intro); if(location.hash){ var t = document.querySelector(location.hash); if(t) t.scrollIntoView(); } }, 520); };
-    var open = function(){ if(stage) return; stage = 1; intro.classList.add('open'); t2 = setTimeout(finish, 1700); };
-    t1 = setTimeout(open, 700);
-    intro.onclick = function(){ if(stage === 0){ clearTimeout(t1); open(); } else finish(); };
+    var stage = 0, t2;
+    var finish = function(){ if(stage === 2) return; stage = 2; clearTimeout(t2); intro.classList.add('open', 'out'); document.body.classList.remove('lock');
+      setTimeout(function(){ if(intro.parentNode) intro.parentNode.removeChild(intro); if(location.hash){ var t = document.querySelector(location.hash); if(t) t.scrollIntoView(); } }, 720); };
+    var open = function(){ if(stage) return; stage = 1; intro.classList.add('open'); t2 = setTimeout(finish, 1500); };
+    document.getElementById('enterBtn').onclick = function(e){ e.stopPropagation(); open(); };
+    intro.onclick = function(){ if(stage === 1) finish(); };
   }
   document.getElementById('logo').innerHTML = YP.logo(24, true) + '유성 국화 여권 · 30초 둘러보기';
   for(var i = 1; i <= 5; i++) document.getElementById('ar' + i).innerHTML = YP.icon('chev', 20);

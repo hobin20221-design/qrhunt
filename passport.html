@@ -25,12 +25,13 @@ a{color:inherit}
 .book .rule{font-size:12px;color:var(--cream);display:flex;align-items:center;gap:6px;opacity:.9}
 .open{width:100%;max-width:340px;border:0;border-radius:18px;background:var(--mustard);color:var(--char);font:inherit;font-size:17px;font-weight:800;padding:16px;cursor:pointer;margin-top:auto}
 .priv{font-size:12px;color:var(--sub);line-height:1.6}
+/* 표지: '여권으로 들어가기'를 누르면 책 표지가 왼쪽으로 넘어간 뒤, 표지 화면 전체가 위로 올라가며 여권이 나옴 */
+#cover{position:fixed;inset:0;z-index:40;overflow:auto;transition:transform .65s cubic-bezier(.55,0,.25,1);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+#cover.up{transform:translateY(-105%)}
 .book{transform-origin:left center}
-.book.opening{transform:perspective(1200px) rotateY(-100deg);opacity:0;transition:transform .6s cubic-bezier(.65,.05,.3,1),opacity .35s .3s}
-#cover{transition:opacity .35s .35s}
-#cover.fading{opacity:0}
-#app.reveal{animation:reveal .45s ease both}
-@keyframes reveal{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.book.opening{transform:perspective(1200px) rotateY(-100deg);opacity:0;transition:transform .6s cubic-bezier(.65,.05,.3,1),opacity .3s .35s}
+.open{animation:rise .6s .25s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes rise{from{opacity:0;transform:translateY(60px)}to{opacity:1;transform:none}}
 /* ---------- 내 여권 ---------- */
 .no{font-size:12px;color:var(--sub)}
 .top{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
@@ -100,7 +101,7 @@ h3{font-size:15px;margin:22px 2px 8px}
     <div><h1>유성 국화 여권</h1><div class="en">CHRYSANTHEMUM PASSPORT</div></div>
     <div class="rule" id="rule1"></div>
   </div></div>
-  <button class="open" id="openBtn">여권 펼치기</button>
+  <button class="open" id="openBtn">여권으로 들어가기</button>
   <div class="priv" id="priv">처음이면 닉네임·소속만 등록해요<br>실명·연락처는 받지 않아요</div>
 </section>
 
@@ -184,9 +185,13 @@ function render(){
   if(sg) sg.onclick = function(e){ var m = e.target.getAttribute && e.target.getAttribute('data-m'); if(m){ MODE2 = m; render(); } };
 }
 function openPassport(){
-  if(OPENED) return;
-  var b = document.getElementById('book'); b.classList.add('opening'); cover.classList.add('fading');
-  setTimeout(function(){ cover.classList.add('hide'); app.classList.remove('hide'); app.classList.add('reveal'); nav(true); window.scrollTo(0, 0); OPENED = true; if(D) render(); else app.innerHTML = '<p class="foot">여권을 펼치는 중…</p>'; try{ sessionStorage.setItem('yp-opened', '1'); }catch(e){} }, 700);
+  if(OPENED) return; OPENED = true;
+  var b = document.getElementById('book'); b.classList.add('opening');
+  setTimeout(function(){
+    app.classList.remove('hide'); nav(true); window.scrollTo(0, 0); if(D) render(); else app.innerHTML = '<p class="foot">여권을 펼치는 중…</p>';
+    cover.classList.add('up'); setTimeout(function(){ cover.classList.add('hide'); }, 720);
+    try{ sessionStorage.setItem('yp-opened', '1'); }catch(e){}
+  }, 650);
 }
 document.getElementById('openBtn').onclick = openPassport;
 /* 보상함 탭이거나, 여권 안의 다른 화면(사진·주차 등)에서 돌아오면 표지 건너뜀.
@@ -194,8 +199,6 @@ document.getElementById('openBtn').onclick = openPassport;
 var skip = Q.get('tab') || Q.get('open');
 try{ var ref = document.referrer ? new URL(document.referrer) : null;
   if(ref && ref.origin === location.origin && !/\/(home|all|portal)\.html$|\/$/.test(ref.pathname)) skip = skip || sessionStorage.getItem('yp-opened'); }catch(e){}
-/* 가입 기록이 없는 사람(발표 중 QR을 찍은 심사위원 등)은 표지를 잠깐 보여 준 뒤 버튼 없이 저절로 펼침 */
-if(!skip && !tok()) setTimeout(function(){ if(!OPENED) openPassport(); }, 1100);
 nav(false);
 if(skip){ cover.classList.add('hide'); app.classList.remove('hide'); setTimeout(function(){ nav(true); }, 0); app.innerHTML = '<p class="foot">여권을 펼치는 중…</p>'; }
 var t = tok();
