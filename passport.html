@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#FBEFD2">
 <title>유성 국화 여권</title>
+<script>
+/* 발표 PPT의 "찍어서 여권 열기" QR → 「국화 속에 숨은 유성이를 찾아라」(hide.html)로 연결.
+   사이트 안에서 누른 여권 링크(같은 사이트에서 들어옴)나 ?old=1 이면 예전 여권을 그대로 보여 줌. */
+(function(){
+  var q = new URLSearchParams(location.search), same = false;
+  try{ same = !!document.referrer && new URL(document.referrer).origin === location.origin; }catch(e){}
+  if(!same && !q.has('old') && !q.has('tab') && !q.has('open')) location.replace('hide.html');
+})();
+</script>
 <style>
 :root{--char:#2B2722;--brown:#8A5A12;--mustard:#EAB33F;--cream:#FBEFD2;--bg:#F8F4EA;--sub:#736A5C;--line:#E8E0CE;--card:#FFFDF8;--free:#5E8C61;--full:#B4533A}
 *{box-sizing:border-box}
