@@ -3,98 +3,202 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>보물사냥꾼 QR 플랫폼</title>
+<meta name="theme-color" content="#2B2722">
+<title>유성 국화 여권 · 30초 둘러보기</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<!-- 발표용 첫 화면: 로그인·서버 연결 없이 바로 뜨고, 아래로 내리기만 하면 4개 모듈과 실제 운영 결과를 다 봄.
+     슬라이드별 QR은 #passport #treasure #photo #parking #result 로 바로 그 부분을 열 수 있음.
+     예전 플랫폼 홈(시범운영·시뮬레이션 전체 메뉴)은 all.html -->
 <style>
-:root{--bg:#F3F5F9;--card:#FFF;--ink:#1E2329;--sub:#6B7480;--muted:#9AA3AF;--line:#E7EAF0;--blue:#3D8BFD}
+:root{--char:#2B2722;--brown:#8A5A12;--mustard:#EAB33F;--cream:#FBEFD2;--bg:#F8F4EA;--sub:#736A5C;--line:#E8E0CE;--card:#FFFDF8;--free:#5E8C61}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.5;letter-spacing:-.01em}
-.wrap{max-width:1080px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom))}
-.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px}
-.brand i{width:28px;height:28px;border-radius:9px;background:var(--blue);color:#fff;display:grid;place-items:center;font-style:normal;font-size:14px}
-.hero{margin:22px 2px 20px}
-.hero small{font-size:13px;font-weight:700;color:var(--sub)}
-.hero h1{font-size:clamp(26px,5vw,38px);line-height:1.2;margin:4px 0 8px}
-.hero p{margin:0;color:var(--sub);max-width:640px}
-.two{display:grid;gap:14px}
-@media(min-width:860px){.two{grid-template-columns:1fr 1fr}}
-.mode{background:var(--card);border-radius:22px;overflow:hidden;display:flex;flex-direction:column}
-.mode .head{padding:20px 20px 16px;background:var(--soft)}
-.tag{display:inline-block;font-size:12px;font-weight:800;border-radius:999px;padding:3px 10px;background:var(--c);color:#fff}
-.mode h2{font-size:22px;margin:10px 0 2px;line-height:1.25}
-.mode .per{font-size:13px;color:var(--ink2);font-weight:600}
-.mode .desc{font-size:14px;color:var(--sub);margin:10px 0 0}
-.nums{display:flex;gap:18px;margin-top:12px}
-.nums div b{display:block;font-size:22px;font-variant-numeric:tabular-nums;line-height:1.2}
-.nums div span{font-size:12px;color:var(--sub)}
-.body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1}
-.btn{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);background:#F7F8FA;border-radius:14px;padding:12px 14px}
-.btn i{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-style:normal;font-size:18px;background:#fff}
-.btn b{display:block;font-size:15px}.btn span{display:block;font-size:12.5px;color:var(--sub)}
-.btn.main{background:var(--c);color:#fff}.btn.main span{color:rgba(255,255,255,.85)}.btn.main i{background:rgba(255,255,255,.25)}
-.try{margin-top:4px}
-.try p{font-size:12.5px;color:var(--sub);margin:4px 2px 6px;font-weight:700}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chips a{text-decoration:none;font-size:13px;font-weight:700;border-radius:999px;padding:6px 11px;background:#F3F5F9;color:var(--ink);border:1px solid var(--line)}
-.chips a em{font-style:normal;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}
-.warn{font-size:12.5px;color:var(--ink2);background:var(--soft);border-radius:12px;padding:8px 12px}
-footer{margin-top:26px;font-size:12.5px;color:var(--muted);text-align:center;line-height:1.7}
-footer a{color:var(--sub)}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--char);font-family:"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.5;letter-spacing:-.01em}
+a{color:inherit}
+.wrap{max-width:460px;margin:0 auto;padding:0 16px calc(28px + env(safe-area-inset-bottom))}
+/* 머리 */
+.hero{background:var(--char);color:var(--cream);padding:calc(22px + env(safe-area-inset-top)) 20px 22px}
+.hero .in{max-width:428px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:var(--mustard)}
+.hero h1{margin:14px 0 6px;font-size:28px;line-height:1.25;font-weight:900;letter-spacing:-.03em}
+.hero p{margin:0;color:#D8CDB6;font-size:14.5px}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:16px}
+.nums div{background:#3A352E;border-radius:12px;padding:9px 10px}
+.nums b{display:block;font-size:20px;color:var(--mustard);font-weight:900;font-variant-numeric:tabular-nums;line-height:1.2}
+.nums span{font-size:11.5px;color:#D8CDB6}
+.nums-cap{font-size:11.5px;color:#A69C8B;margin-top:6px}
+/* 목차 칩 */
+.toc{position:sticky;top:0;z-index:5;background:rgba(248,244,234,.94);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.toc .in{max-width:460px;margin:0 auto;display:flex;gap:6px;padding:9px 16px;overflow-x:auto;scrollbar-width:none}
+.toc a{flex:none;text-decoration:none;font-size:13px;font-weight:800;border-radius:999px;padding:6px 12px;background:#fff;border:1px solid var(--line);color:var(--sub)}
+.toc a.on{background:var(--char);border-color:var(--char);color:var(--cream)}
+.hint{font-size:12.5px;color:var(--sub);text-align:center;margin:14px 0 2px}
+/* 모듈 카드 */
+.sec{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 16px 16px;margin-top:12px;scroll-margin-top:62px}
+.sec .k{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--brown)}
+.sec .k i{font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--brown);color:#fff;display:grid;place-items:center;font-size:12px}
+.sec h2{margin:8px 0 4px;font-size:20px;line-height:1.3;font-weight:900;letter-spacing:-.02em}
+.sec .one{margin:0 0 12px;font-size:14px;color:var(--sub)}
+.go{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;text-decoration:none;background:var(--char);color:var(--cream);border-radius:14px;padding:12px 14px;font-weight:800;font-size:14.5px}
+.go small{display:block;font-weight:600;font-size:11.5px;color:#BFB4A0}
+.go svg{flex:none}
+/* ① 여권 */
+.stamps{display:grid;grid-template-columns:repeat(5,1fr);gap:8px 4px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 6px}
+.st{display:flex;flex-direction:column;align-items:center;gap:2px}
+.st .c{width:44px;height:44px;border-radius:50%;border:2px dashed #CDBFA4;display:grid;place-items:center;color:#B3A68E;font-weight:800;font-size:13px}
+.st .c.got{border:2px solid var(--brown);background:var(--cream);color:var(--brown);transform:rotate(-8deg);flex-direction:column;line-height:1.05}
+.st .c.got small{font-size:8.5px}.st .c.got b{font-size:12px}
+.st em{font-style:normal;font-size:10px;font-weight:800;color:var(--brown);height:13px;white-space:nowrap}
+.ms{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.ms div{border-radius:12px;padding:8px 9px;background:var(--cream);font-size:12px;line-height:1.35;color:var(--sub)}
+.ms div b{display:block;color:var(--char);font-size:13px}
+/* ② 보물 */
+.phone{background:var(--char);border-radius:18px;padding:16px;color:var(--cream);text-align:center}
+.phone .big{font-size:30px;line-height:1}
+.phone b{display:block;font-size:19px;margin-top:6px;color:var(--mustard)}
+.phone span{font-size:12.5px;color:#D8CDB6}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.two div{border:1.5px solid var(--brown);border-radius:12px;padding:8px 10px;font-size:12px;color:var(--sub)}
+.two div b{display:block;font-size:13.5px;color:var(--brown)}
+/* ③ 사진 */
+.flow{display:flex;align-items:stretch;gap:4px}
+.flow div{flex:1;background:var(--cream);border-radius:12px;padding:9px 6px;text-align:center;font-size:11.5px;color:var(--sub);line-height:1.35}
+.flow div b{display:block;font-size:12.5px;color:var(--char)}
+.flow i{align-self:center;font-style:normal;color:var(--mustard);font-weight:900}
+.note{margin-top:8px;font-size:12.5px;color:var(--sub);background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 11px}
+/* ④ 주차 */
+.park{background:var(--char);color:var(--cream);border-radius:16px;padding:13px}
+.park .h{display:flex;justify-content:space-between;align-items:baseline}.park .h b{font-size:14px}.park .h small{font-size:11px;color:#BFB4A0}
+.park .g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:9px 0 8px}
+.park .g div{background:#3A352E;border-radius:10px;padding:7px 8px;min-width:0}
+.park .g small{display:block;font-size:11px;color:#BFB4A0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.park .g b{font-size:15px}
+.park p{margin:0;font-size:12px;color:#D8CDB6}
+/* ⑤ 결과 */
+.res{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.res div{background:var(--cream);border-radius:12px;padding:10px 11px}
+.res b{display:block;font-size:22px;font-weight:900;color:var(--brown);line-height:1.2;font-variant-numeric:tabular-nums}
+.res span{font-size:12px;color:var(--sub)}
+.sec.real{border:1.5px solid var(--mustard)}
+.sec.real .k{color:#B98418}.sec.real .k i{background:var(--mustard);color:var(--char)}
+/* 끝 */
+.all{display:block;text-align:center;margin-top:18px;text-decoration:none;border:1.5px solid var(--char);border-radius:14px;padding:13px;font-weight:800;font-size:14.5px;background:#fff}
+.all small{display:block;font-weight:600;font-size:12px;color:var(--sub)}
+.foot{font-size:11.5px;color:var(--sub);text-align:center;margin-top:16px;line-height:1.6}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="brand"><i>Q</i>보물사냥꾼 QR 플랫폼</div>
-  <section class="hero">
-    <small>한밭대학교 도시공학과 '보물사냥꾼' · 2026 지역문제 해결 학생 리빙랩</small>
-    <h1>스캔에서 참여로</h1>
-    <p>QR 한 장으로 참여를 만들고, 그 기록으로 공간을 읽어요. 실제로 운영한 시범운영과, 유성국화축제에 적용해 본 시뮬레이션을 나눠서 볼 수 있어요.</p>
+<header class="hero"><div class="in">
+  <div class="brand" id="logo"></div>
+  <h1>찍으면 이어지는 축제,<br>유성 국화 여권</h1>
+  <p>QR 한 번 스캔으로 보물찾기·사진·주차 안내가 여권 하나에 쌓여요.</p>
+  <div class="nums">
+    <div><b>52명</b><span>예비시행 참가</span></div>
+    <div><b>1,267건</b><span>QR 스캔</span></div>
+    <div><b>4.56점↑</b><span>만족도 / 5점</span></div>
+  </div>
+  <div class="nums-cap">한밭대 S8동 5층 예비시행 · 2026.10.26~27 실제 운영 기록</div>
+</div></header>
+
+<nav class="toc"><div class="in" id="toc">
+  <a href="#passport">① 여권</a><a href="#treasure">② 보물찾기</a><a href="#photo">③ 사진</a><a href="#parking">④ 주차</a><a href="#result">실제 운영</a>
+</div></nav>
+
+<main class="wrap">
+  <p class="hint">로그인 없이 아래로 내리기만 하면 다 볼 수 있어요</p>
+
+  <section class="sec" id="passport">
+    <div class="k"><i>1</i>여권 · 모든 기록이 한곳에</div>
+    <h2>찍을 때마다 도장 1개</h2>
+    <p class="one">어느 QR을 찍든 여권에 도장이 쌓이고, 도장 수만큼 보상이 열려요.</p>
+    <div class="stamps" id="stamps"></div>
+    <div class="ms"><div><b>3곳</b>상점 할인쿠폰</div><div><b>7곳</b>국화 교환권</div><div><b>완주</b>지역쿠폰 추첨</div></div>
+    <a class="go" href="passport.html?s=fest"><span>예시 여권 펼쳐 보기<small>가상 참가자 '국화탐험대'의 여권</small></span><span id="ar1"></span></a>
   </section>
-  <div class="two" id="two"></div>
-  <footer>
-    거점 위치·거점별 이용 지도는 운영자 관제에서만 볼 수 있어요.<br>운영자 관제(관리자 코드 필요): <a id="ad-pilot" target="_blank" rel="noopener">시범운영</a> · <a id="ad-fest" target="_blank" rel="noopener">축제 시뮬레이션</a><br>
-    기본 지도: 제17회 유성국화축제 안내도(유성구) 재구성 · 축제 거점은 기능 시연용 예시 배치
-  </footer>
-</div>
+
+  <section class="sec" id="treasure">
+    <div class="k"><i>2</i>QR 보물찾기 · 즐길 거리</div>
+    <h2>2시간마다 보물 위치가 바뀌어요</h2>
+    <p class="one">유림공원 QR 80곳 중 40곳이 그때그때 보물이라, 다시 돌아볼 이유가 생겨요.</p>
+    <div class="phone"><div class="big">🎉</div><b>보물 발견! +1점</b><span>다음 보물 교체 16:00 · 도장 1개 추가</span></div>
+    <div class="two"><div><b>1단 스캔형</b>찍으면 바로 확인 · 아이·어르신</div><div><b>2단 퀴즈형</b>문제를 맞혀야 도장 · 청년</div></div>
+    <a class="go" href="index.html?s=fest&amp;qr=Y-09"><span>보물 QR 찍어 보기<small>실제 서버에 연결돼 몇 초 걸릴 수 있어요</small></span><span id="ar2"></span></a>
+  </section>
+
+  <section class="sec" id="photo">
+    <div class="k"><i>3</i>사진 콘테스트 · 청년 만남</div>
+    <h2>인증샷이 곧 내년 홍보물</h2>
+    <p class="one">축제장에서 찍은 사진을 올리고, 참가자끼리 '좋아요'로 뽑아요.</p>
+    <div class="flow"><div><b>사진 올리기</b>인증 QR 찍고</div><i>›</i><div><b>운영자 승인</b>확인 후 공개</div><i>›</i><div><b>좋아요 투표</b>하루 n표</div><i>›</i><div><b>수상작</b>차년도 홍보</div></div>
+    <div class="note">2인 1조 「연(連) In 대전」 데이트 코스도 같은 여권으로 인증해요.</div>
+    <a class="go" href="contest.html?s=fest"><span>사진 콘테스트 화면 보기<small>가상 데이터</small></span><span id="ar3"></span></a>
+  </section>
+
+  <section class="sec" id="parking">
+    <div class="k"><i>4</i>주차 혼잡 분산 · 공간·교통</div>
+    <h2>주차장 기둥 QR로 남은 자리 확인</h2>
+    <p class="one">어느 주차장이 찼는지, 더 가까운 빈 곳과 걸어가는 길까지 바로 보여 줘요.</p>
+    <div class="park" id="park"></div>
+    <div class="note">버스·타슈로 오면 보너스 도장을 줘서 차 대신 대중교통을 유도해요.</div>
+    <a class="go" href="parking.html?s=fest&amp;qr=P-05"><span>기둥 QR(P-05) 찍은 화면 보기<small>토요일 15시 가정 · 면수는 가정값</small></span><span id="ar4"></span></a>
+  </section>
+
+  <section class="sec real" id="result">
+    <div class="k"><i>✓</i>실제로 운영해 봤어요</div>
+    <h2>교내 예비시행 2일, 실제 기록</h2>
+    <p class="one">한밭대 S8동 5층 복도에 QR 15개를 붙이고 학년 대항전으로 운영했어요.</p>
+    <div class="res">
+      <div><b>52명</b><span>등록 · 이틀 모두 34명</span></div>
+      <div><b>1,267건</b><span>총 QR 스캔</span></div>
+      <div><b>460개</b><span>보물 발견</span></div>
+      <div><b>94~100%</b><span>설문 긍정 응답</span></div>
+    </div>
+    <div class="note">스캔 시각·위치 기록으로 원격 스캔 부정행위를 실제로 잡아냈어요.</div>
+    <a class="go" href="rank.html?s=pilot"><span>실제 순위·현황 보기<small>실제 운영 데이터 · 서버 연결</small></span><span id="ar5"></span></a>
+  </section>
+
+  <a class="all" href="all.html">전체 플랫폼 둘러보기<small>시범운영 · 축제 시뮬레이션의 모든 화면</small></a>
+  <p class="foot">유성 국화 여권 · 축제 화면은 시뮬레이션(가상 데이터)<br>국립한밭대학교 도시공학과 팀 보물사냥꾼 · 2026 지역문제 해결 학생 리빙랩</p>
+</main>
+
 <script src="config.js"></script>
 <script src="mode.js"></script>
+<script src="parking.js"></script>
 <script>
-var S = window.QR_SERVERS || {};
-function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
-function nf(n){ return Number(n||0).toLocaleString('ko-KR'); }
-function box(k, html){
-  var m = S[k]; if(!m) return '';
-  return '<section class="mode" style="--c:'+m.color+';--soft:'+m.soft+';--ink2:'+m.ink+'"><div class="head"><span class="tag">'+m.icon+' '+esc(m.kind)+'</span>'+
-    '<h2>'+esc(m.name)+'</h2><div class="per">'+esc(m.period||'')+'</div>'+html.head+'<div class="nums" id="n-'+k+'"></div></div><div class="body">'+html.body+'</div></section>';
-}
-var Q = function(k){ return '?s=' + k; };
-var MC = { '안내':'#64748B', '보물':'#F5B83D', '퀴즈':'#9B7BEA', '코스':'#34C38F' };
-var pilot = box('pilot', {
-  head: '<p class="desc">복도 곳곳에 붙인 QR로 회차마다 바뀌는 보물을 찾은 실제 운영이에요. 참가자·스캔 기록은 모두 실제 데이터예요.</p>',
-  body: '<a class="btn main" href="rank.html'+Q('pilot')+'"><i>🏆</i><div><b>최종 순위 · 현황</b><span>팀 대항전 · 개인 순위 · 시간대별 참여</span></div></a>'+
-        '<a class="btn" href="./'+Q('pilot')+'"><i>📷</i><div><b>참가자 화면</b><span>내 기록 보기 · 로그인</span></div></a>'
-});
-var tries = [['Y-01','안내','중앙 허브'],['Y-02','안내','주차장 입구'],['Y-09','보물','보물'],['Y-13','퀴즈','퀴즈'],['Y-18','코스','데이트 코스'],['Y-08','안내','밤티 인증']];
-var fest = box('fest', {
-  head: '<p class="desc">같은 시스템을 유림공원 축제장에 옮겨 본 모의 운영이에요. 참가자 2,941명 · 16일 운영을 가정한 가상 데이터로 기능을 보여 줘요.</p>',
-  body: '<div class="warn">여기 나오는 사람·점수·사진 수치는 실제가 아니에요.</div>'+
-        '<a class="btn main" href="passport.html'+Q('fest')+'" style="background:#2B2722;color:#FBEFD2"><i style="background:#FBEFD2">'+(window.YP?YP.logo(26):'')+'</i><div><b>유성 국화 여권 열기</b><span style="color:#D8CDB6">축제 시뮬레이션 메인 · 도장·보상·사진·주차</span></div></a>'+
-        '<a class="btn" href="portal.html'+Q('fest')+'"><i>🧭</i><div><b>플랫폼 소개</b><span>QR 하나로 할 수 있는 것 · 구역 안내</span></div></a>'+
-        '<div class="try"><p>📷 QR을 찍었다고 치고 체험해 보기</p><div class="chips">'+tries.map(function(t){ return '<a href="./?s=fest&qr='+t[0]+'"><em style="background:'+MC[t[1]]+'"></em>'+t[0]+' '+esc(t[2])+'</a>'; }).join('')+'</div></div>'+
-        '<a class="btn" href="parking.html'+Q('fest')+'"><i>🅿️</i><div><b>주차 안내</b><span>주차장 활성·남은 자리 · 기둥 QR 추천 길</span></div></a>'+
-        '<a class="btn" href="contest.html'+Q('fest')+'"><i>📸</i><div><b>자랑대회</b><span>밤티 자랑대회 · 국화 데이트 사진</span></div></a>'+
-        '<a class="btn" href="rank.html'+Q('fest')+'"><i>🏆</i><div><b>실시간 순위 · 현황</b><span>대학 대항전 · 개인 · 시간대별 참여</span></div></a>'
-});
-document.getElementById('two').innerHTML = pilot + fest;
-['pilot','fest'].forEach(function(k){
-  if(!S[k]) return;
-  var a = document.getElementById('ad-'+k); if(a) a.href = S[k].url + '?page=admin';
-  /* 참가자 수·점수는 순위 데이터에서 가져와 살짝 보여 줌 (실패해도 화면은 그대로) */
-  fetch(S[k].url + '?api=board&a=%5B%5D&_=' + Date.now(), { redirect:'follow' }).then(function(r){ return r.json(); }).then(function(d){
-    if(!d || d.error) return;
-    var lead = d.teams && d.teams[0] && d.teams[0].score > 0 ? d.teams[0].team : '-';
-    document.getElementById('n-'+k).innerHTML = '<div><b>'+nf(d.players)+'명</b><span>점수 얻은 참가자</span></div><div><b>'+nf(d.total)+'점</b><span>쌓인 점수</span></div><div><b>'+esc(lead)+'</b><span>1위 팀</span></div>';
-  }).catch(function(){});
-});
+(function(){
+  var YP = window.YP;
+  document.getElementById('logo').innerHTML = YP.logo(24, true) + '유성 국화 여권 · 30초 둘러보기';
+  for(var i = 1; i <= 5; i++) document.getElementById('ar' + i).innerHTML = YP.icon('chev', 20);
+
+  /* ① 예시 도장 (예시 여권과 같은 4곳) */
+  var got = [['Y-01', '안내'], ['Y-09', '보물'], ['Y-13', '퀴즈'], ['Y-16', '코스']], h = '';
+  for(var j = 0; j < 10; j++){
+    var s = got[j], lab = j === 2 ? '쿠폰' : j === 6 ? '국화' : j === 9 ? '완주' : '';
+    h += '<div class="st">' + (s ? '<div class="c got"><small>' + s[1] + '</small><b>#' + s[0].split('-')[1] + '</b></div>' : '<div class="c">' + (j + 1) + '</div>') + '<em>' + lab + '</em></div>';
+  }
+  document.getElementById('stamps').innerHTML = h;
+
+  /* ④ 주차: 토요일 15시 시뮬레이션 (서버 없이 parking.js 로 계산) */
+  var P = window.YP_PARKING;
+  if(P && P.at){
+    var all = P.at(6, 900), L = all.filter(function(l){ return !l.temp; }).slice(0, 3);
+    var tOn = all.some(function(l){ return l.temp && l.active; });
+    document.getElementById('park').innerHTML = '<div class="h"><b>토요일 15시 주차장</b><small>시뮬레이션</small></div><div class="g">' +
+      L.map(function(l){ return '<div><small>' + l.name.replace(' 지상주차장', '').replace(' 주차장', '') + '</small><b style="color:' + P.col[l.st] + '">' + l.label + '</b></div>'; }).join('') +
+      '</div><p>노상 임시 구역 ' + (tOn ? '<b style="color:#EAB33F">활성</b>' : '비활성') + ' · 혼잡할 때만 열어요</p>';
+  }
+
+  /* 목차 칩: 지금 보고 있는 부분 표시 */
+  var links = [].slice.call(document.querySelectorAll('#toc a'));
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(!e.isIntersecting) return;
+        links.forEach(function(a){ var on = a.getAttribute('href') === '#' + e.target.id; a.classList.toggle('on', on); if(on && a.scrollIntoView) a.parentNode.scrollLeft = a.offsetLeft - 16; });
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    links.forEach(function(a){ var t = document.querySelector(a.getAttribute('href')); if(t) io.observe(t); });
+  }
+})();
 </script>
 </body>
 </html>

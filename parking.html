@@ -62,45 +62,54 @@ h1{font-size:23px;margin:4px 2px 2px;letter-spacing:-.02em}
 .lot .d{grid-column:2/4;font-size:12px;color:var(--sub)}
 .lot.sel{background:var(--cream);border-radius:12px}
 .note{font-size:12px;color:var(--sub);line-height:1.6;margin-top:12px}
+.scen{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--brown);background:var(--cream);border-radius:12px;padding:8px 12px;margin:2px 0 10px}
+.here{margin-bottom:12px}
+.more{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:0 14px}
+.more summary{cursor:pointer;font-size:13.5px;font-weight:800;color:var(--sub);padding:13px 0;list-style:none}
+.more summary::-webkit-details-marker{display:none}
+.more summary:before{content:'＋ ';color:var(--brown)}
+.more[open] summary:before{content:'－ '}
+.more[open]{padding-bottom:14px}
 .tag{display:inline-block;font-size:11px;font-weight:800;color:var(--brown);background:var(--cream);border-radius:6px;padding:1px 6px}
 </style>
 </head>
 <body>
 <header class="bar"><div class="brand"><i id="lg"></i><span>주차 안내</span></div><nav><a href="passport.html?s=fest">여권</a></nav></header>
+<!-- 발표용으로 단순화: 기본은 '토요일 15시에 노상 3구역 P-05 기둥을 찍었다'는 장면 하나.
+     찍은 결과 카드 → 지도(걸어갈 길) 순서로만 보여 주고, 시간 바꾸기·주차장 전체 목록·설명은 '자세히 보기' 안에 접어 둠.
+     다른 기둥·시각은 ?qr=P-01&day=0&t=1140 처럼 주소로 바꿀 수 있음 -->
 <main class="wrap">
-  <h1>지금 어디에 세울까</h1>
-  <p class="lead">주차장 기둥의 QR을 찍으면 그 자리가 열려 있는지, 남은 자리와 더 나은 주차장, 걸어갈 길이 바로 떠요.</p>
+  <div class="scen" id="scen"></div>
   <div id="here"></div>
-  <div class="when">
-    <div class="seg" id="day"><button data-d="3">평일</button><button data-d="6">토요일</button><button data-d="0">일요일</button></div>
-    <div class="slider"><input type="range" id="t" min="600" max="1290" step="30" aria-label="시뮬레이션 시각"><b id="tv"></b></div>
-    <span class="upd" id="upd"></span>
-  </div>
-  <div class="sum" id="sum"></div>
-  <div class="cols">
-    <section class="card">
-      <div class="map" id="map"></div>
-      <div class="lg"><span><i style="background:var(--free)"></i>여유</span><span><i style="background:var(--mid)"></i>보통</span><span><i style="background:var(--full)"></i>만차</span><span><i style="background:var(--off)"></i>비활성·운영 전</span>
-        <label><input type="checkbox" id="showY" checked> 축제 QR 위치</label></div>
-    </section>
+  <section class="card">
+    <div class="map" id="map"></div>
+    <div class="lg"><span><i style="background:var(--free)"></i>여유</span><span><i style="background:var(--mid)"></i>보통</span><span><i style="background:var(--full)"></i>만차</span><span><i style="background:var(--off)"></i>닫힘</span><span><i style="width:14px;height:0;border-radius:0;border-top:2px dashed var(--ink);background:none"></i>걸어갈 길</span></div>
+  </section>
+  <details class="more">
+    <summary>자세히 보기 · 시간 바꿔 보기, 주차장 8곳 전체</summary>
+    <div class="when">
+      <div class="seg" id="day"><button data-d="3">평일</button><button data-d="6">토요일</button><button data-d="0">일요일</button></div>
+      <div class="slider"><input type="range" id="t" min="600" max="1290" step="30" aria-label="시뮬레이션 시각"><b id="tv"></b></div>
+      <span class="upd" id="upd"></span>
+    </div>
+    <div class="sum" id="sum"></div>
     <section class="card"><div id="list"></div></section>
-  </div>
-  <p class="note"><span class="tag">시뮬레이션</span> 주차장 목록은 2025년 제16회 축제 보도 기준(유림공원·유성구청 지상주차장, 온천로 노상 임시주차장, KISTI 18시 이후 개방, KAIST 400면)이고, 면수는 KAIST만 보도 수치, 나머지는 가정값이에요. 노상 구역 1~4의 위치·QR 기둥은 제안 예시예요. 대수는 실제 측정이 아니라 시간대 패턴으로 만든 가상 값이고, 실제 운영에서는 주차 요원이 30분마다 입력한 값으로 바뀌어요. 걷는 시간은 직선 거리로 어림한 값이에요.</p>
+    <p class="note"><span class="tag">시뮬레이션</span> 주차장 목록은 2025년 제16회 축제 보도 기준이고, 면수는 KAIST(400면)만 보도 수치, 나머지는 가정값이에요. 대수는 시간대 패턴으로 만든 가상 값이고, 실제 운영에서는 주차 요원이 30분마다 입력해요.</p>
+  </details>
 </main>
 <script src="config.js"></script>
 <script>if(!new URLSearchParams(location.search).get('s')) history.replaceState(null,'',location.pathname+'?s=fest'+location.search.replace(/^\?/,'&'));</script>
 <script src="mode.js"></script>
 <script src="parking.js"></script>
 <script>
-var P = window.YP_PARKING, Q = new URLSearchParams(location.search), HERE = Q.get('qr') || '';
+var P = window.YP_PARKING, Q = new URLSearchParams(location.search), HERE = Q.get('qr') || 'P-05';  /* QR 없이 들어와도 발표 장면(P-05)을 보여 줌 */
 var Y = [["Y-01","종합안내소","안내",60.9,46.4],["Y-02","유성구청 주차장(북측)","안내",40.2,13.1],["Y-03","보행교 서측 입구","안내",9.1,66.5],["Y-04","꽃탑 남측 입구","안내",51.2,82.2],["Y-05","유림공원 주차장(서측)","안내",27.3,55.8],["Y-06","어은교 남단 입구","안내",65.4,39.2],["Y-07","서편무대","안내",44.4,74.3],["Y-08","국화체험부스","안내",90.9,19.1],["Y-13","태권V 조형물","퀴즈",83.5,32.9],["Y-14","대학협력정원(충남대)","퀴즈",77.5,39.2],["Y-15","국화터널(동편)","퀴즈",73.3,42.8],["Y-16","미니한빛탑","코스",14.5,74.7],["Y-17","국화터널(서편)","코스",21.1,69.6],["Y-18","코스모스정원","코스",33.6,69.3],["Y-19","원형돔","코스",35.1,78.5],["Y-20","국화글자 포토존","코스",39.2,61.2],["Y-21","에펠탑 조형물","코스",49,65.4],["Y-22","대학협력정원(한밭대)","코스",57.9,60.5],["Y-23","꽃폭포","코스",49.5,55.4]];
 var H = 100 * 1380 / 1938;
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function ic(n, s){ return window.YP ? YP.icon(n, s) : ''; }
 document.getElementById('lg').innerHTML = window.YP ? YP.logo(26) : '';
-/* 처음 시각: 지금이 축제 시간(10~22시)이면 지금, 아니면 토요일 오후 3시 */
-var now = new Date(), DAY = now.getDay(), MIN = now.getHours() * 60 + now.getMinutes();
-if(MIN < 600 || MIN > 1290){ DAY = 6; MIN = 900; }
+/* 처음 시각: 발표 장면에 맞춰 늘 토요일 오후 3시(가장 붐비는 때). 주소의 day·t로 바꿀 수 있음 */
+var DAY = 6, MIN = 900;
 if(Q.get('day')) DAY = +Q.get('day'); if(Q.get('t')) MIN = +Q.get('t');
 MIN = MIN - MIN % 30; if([0, 6].indexOf(DAY) < 0) DAY = DAY === 0 ? 0 : (DAY === 6 ? 6 : 3);
 var SEL = '';
@@ -121,8 +130,7 @@ function recCard(l){
   var g = P.gate(l);
   return '<a href="index.html?s=fest&qr=' + esc(g.qr) + '"><b>' + esc(l.name) + '</b> <span style="color:' + stColor(l.st) + ';font-weight:800">· ' + l.label + ' ' + l.left + '자리</span>' +
     '<div class="meta">' + (l.edge ? esc(l.edge) + ' · ' : '') + '주차 후 ' + esc(g.name) + '까지 걸어서 약 ' + l.walk + '분</div>' +
-    '<div class="chips">' + l.route.map(function(r){ return '<span>' + esc(r) + '</span>'; }).join('') + '</div>' +
-    '<span class="gostart">' + ic('qr', 15) + esc(g.qr) + ' ' + esc(g.name) + '에서 여권 시작</span></a>';
+    '<div class="chips">' + l.route.map(function(r){ return '<span>' + esc(r) + '</span>'; }).join('') + '</div></a>';
 }
 function render(){
   var list = P.at(DAY, MIN), me = whereAmI(list), route = null;
@@ -135,11 +143,12 @@ function render(){
     h += '<section class="card here"><small>' + ic('qr', 14) + '지금 찍은 주차 QR</small><h2>' + esc(me.name) + '</h2>' +
       '<span class="st" style="background:' + st.c + '">' + st.t + '</span>' +
       '<p>' + (good ? '여기 세워도 돼요. 아래 길로 걸어가면 축제장 입구예요.' : l && l.temp && !l.active ? '노외 주차장에 아직 자리가 있어서 이 노상 구역은 닫혀 있어요. 가까운 주차장으로 안내할게요.' : '여기는 자리가 없어요. 가까운 곳 중 자리 있는 주차장을 추천해요.') + '</p>' +
-      '<div class="rec">' + (good ? recCard(l) : alts.map(recCard).join('') || '<div class="opt">지금 열린 주차장이 없어요.</div>') + '</div></section>';
+      '<div class="rec">' + (good ? recCard(l) : alts[0] ? recCard(alts[0]) : '<div class="opt">지금 열린 주차장이 없어요.</div>') + '</div></section>';  /* 추천은 1곳만 (발표용) */
     route = routeOf(me, good ? l : (alts[0] || l || { x: me.x, y: me.y, qr: 'Y-01' }));
     SEL = good ? l.id : (alts[0] ? alts[0].id : '');
   }
   document.getElementById('here').innerHTML = h;
+  document.getElementById('scen').innerHTML = ic('qr', 15) + ['일', '월', '화', '수', '목', '금', '토'][DAY] + '요일 ' + hm(MIN) + ' · ' + esc(HERE) + ' 기둥 QR을 찍었다고 가정한 화면';
   /* 요약 */
   var open = list.filter(function(l){ return l.active; }), left = open.reduce(function(s, l){ return s + l.left; }, 0), temps = list.filter(function(l){ return l.temp; }), tOn = temps.some(function(l){ return l.active; });
   document.getElementById('sum').innerHTML = '<div><b>' + open.length + '/' + list.length + '곳</b><span>운영 중</span></div><div><b>' + left.toLocaleString('ko-KR') + '자리</b><span>남은 자리 합계</span></div><div><b style="color:' + (tOn ? P.col.mid : P.col.off) + '">' + (tOn ? '활성' : '비활성') + '</b><span>노상 임시 구역 1~4</span></div>';
@@ -149,7 +158,7 @@ function render(){
   document.getElementById('t').value = MIN;
   /* 지도 */
   var s = '<svg viewBox="0 0 100 ' + H.toFixed(2) + '" xmlns="http://www.w3.org/2000/svg"><image href="yuseong_base.png" x="0" y="0" width="100" height="' + H.toFixed(2) + '" preserveAspectRatio="none"/>';
-  if(document.getElementById('showY').checked) Y.forEach(function(r){
+  if(false) Y.forEach(  /* 발표용: 축제 QR 점은 숨김 */function(r){
     s += '<g><title>' + esc(r[0] + ' ' + r[1]) + '</title><circle cx="' + r[3] + '" cy="' + (r[4] * H / 100) + '" r=".9" fill="#FBEFD2" stroke="#8A5A12" stroke-width=".3"/></g>';
   });
   if(route){
@@ -194,7 +203,6 @@ function render(){
 }
 document.getElementById('day').onclick = function(e){ var d = e.target.getAttribute && e.target.getAttribute('data-d'); if(d == null) return; DAY = +d; render(); };
 document.getElementById('t').oninput = function(){ MIN = +this.value; render(); };
-document.getElementById('showY').onchange = render;
 render();
 </script>
 </body>

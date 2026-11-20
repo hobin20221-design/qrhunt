@@ -185,6 +185,8 @@ function openPassport(){
 document.getElementById('openBtn').onclick = openPassport;
 /* 이미 펼친 적 있거나 보상함 탭으로 들어오면 표지 건너뜀 */
 var skip = Q.get('tab') || Q.get('open'); try{ skip = skip || sessionStorage.getItem('yp-opened'); }catch(e){}
+/* 가입 기록이 없는 사람(발표 중 QR을 찍은 심사위원 등)은 표지를 잠깐 보여 준 뒤 버튼 없이 저절로 펼침 */
+if(!skip && !tok()) setTimeout(function(){ if(!OPENED) openPassport(); }, 1100);
 nav(false);
 if(skip){ cover.classList.add('hide'); app.classList.remove('hide'); setTimeout(function(){ nav(true); }, 0); app.innerHTML = '<p class="foot">여권을 펼치는 중…</p>'; }
 var t = tok();
